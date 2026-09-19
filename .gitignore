@@ -1,0 +1,6 @@
+# VS Code editor settings (local preference, not part of the app)
+.vscode/
+
+# OS-generated files
+.DS_Store
+Thumbs.db

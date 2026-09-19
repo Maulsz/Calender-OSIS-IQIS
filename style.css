@@ -1,0 +1,2403 @@
+/* ==========================================================================
+   KALENDER KEGIATAN - MODERN DESIGN SYSTEM & STYLESHEET
+   Warna Utama: Emerald Green & Slate Neutrals
+   Tipografi: Plus Jakarta Sans
+   ========================================================================== */
+
+:root {
+  /* Palet Warna Primer (Emerald) */
+  --primary: #059669;
+  --primary-hover: #047857;
+  --primary-active: #065f46;
+  --primary-light: #ecfdf5;
+  --primary-border: #a7f3d0;
+  --primary-text: #064e3b;
+
+  /* Warna Aksen & Status */
+  --accent: #10b981;
+  --accent-glow: rgba(16, 185, 129, 0.25);
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --danger-light: #fef2f2;
+  --danger-border: #fecaca;
+  --warning: #f59e0b;
+  --warning-light: #fffbeb;
+  --info: #3b82f6;
+  --info-light: #eff6ff;
+
+  /* Palet Netral (Slate) */
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-input: #ffffff;
+
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+
+  --border-light: #e2e8f0;
+  --border-focus: #10b981;
+
+  /* Bayangan & Elevasi */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+
+  /* Radius Sudut */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Transisi */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reset Dasar */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Kontainer Utama */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+/* ==========================================================================
+   HEADER APLIKASI
+   ========================================================================== */
+.app-header {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: var(--shadow-xs);
+}
+
+.header-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0.875rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.brand-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  flex-shrink: 0;
+}
+
+.brand-text h1 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.brand-text p {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Badge Status Koneksi */
+.badge-status {
+  display: inline-flex;
+  width: fit-content;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.775rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-live {
+  background: var(--primary-light);
+  color: var(--primary-text);
+  border: 1px solid var(--primary-border);
+}
+
+.status-live .status-dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  animation: pulse 2s infinite;
+}
+
+.status-demo {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.status-demo .status-dot {
+  background: #f59e0b;
+}
+
+.status-loading {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+}
+
+.status-loading .status-dot {
+  background: var(--text-light);
+  animation: pulse 1s infinite;
+}
+
+.status-error {
+  background: var(--danger-light);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+}
+
+.status-error .status-dot {
+  background: var(--danger);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+/* ==========================================================================
+   TOMBOL & INTERAKSI
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: 1px solid transparent;
+  outline: none;
+  white-space: nowrap;
+}
+
+.btn:hover,
+.btn:focus,
+.btn:focus-visible,
+.btn:active {
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+}
+
+.btn-primary:focus,
+.btn-primary:focus-visible {
+  outline: none;
+  color: #ffffff;
+  background-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35), 0 2px 8px rgba(5, 150, 105, 0.25);
+}
+
+.btn-primary:active {
+  background-color: var(--primary-active);
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
+}
+
+.btn-outline-primary {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary-border);
+}
+
+.btn-outline-primary:hover {
+  background-color: #d1fae5;
+  border-color: var(--primary);
+}
+
+.btn-outline-primary:focus,
+.btn-outline-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.btn-secondary {
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+  border-color: var(--border-light);
+}
+
+.btn-secondary:hover {
+  background-color: #e2e8f0;
+  color: var(--text-main);
+}
+
+.btn-secondary:focus,
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.25);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-light);
+}
+
+.btn-outline:hover {
+  background-color: var(--bg-subtle);
+  color: var(--primary);
+  border-color: var(--primary-border);
+}
+
+.btn-outline:focus,
+.btn-outline:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background-color: var(--danger-hover);
+  color: #ffffff;
+}
+
+.btn-danger:focus,
+.btn-danger:focus-visible {
+  outline: none;
+  color: #ffffff;
+  background-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.35);
+}
+
+.btn-danger:active {
+  background-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.45);
+}
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8125rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-icon {
+  padding: 0.55rem;
+}
+
+/* Tombol variant teks-only (misal tombol "Lihat Lainnya") */
+button.btn-text,
+.btn.btn-text {
+  background: transparent;
+  color: var(--primary);
+  border: none;
+  font-weight: 600;
+  padding: 0.5rem;
+}
+
+button.btn-text:hover,
+.btn.btn-text:hover {
+  text-decoration: underline;
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  color: var(--primary-hover);
+}
+
+button.btn-text:focus,
+button.btn-text:focus-visible,
+.btn.btn-text:focus,
+.btn.btn-text:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Span teks label di dalam tombol: mencegah style .btn-text bocor ke dalam label tombol */
+.btn>span,
+.btn>.btn-text {
+  background: transparent !important;
+  color: inherit !important;
+  text-decoration: none !important;
+  padding: 0 !important;
+  font-weight: inherit !important;
+}
+
+.btn:hover>.btn-text,
+.btn:focus>.btn-text,
+.btn:active>.btn-text,
+.btn:hover>span,
+.btn:focus>span,
+.btn:active>span {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* ==========================================================================
+   DASHBOARD GRID LAYOUT
+   ========================================================================== */
+.app-main {
+  flex: 1;
+  padding-top: 1.75rem;
+  padding-bottom: 3rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Card Universal */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ==========================================================================
+   CARD: JAM MAKASSAR (WITA)
+   ========================================================================== */
+.clock-card {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.clock-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.clock-info {
+  min-width: 0;
+}
+
+.clock-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.clock-time {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+}
+
+.clock-date {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   CARD: KALENDER BULANAN
+   ========================================================================== */
+.calendar-card {
+  padding: 1.5rem;
+}
+
+.calendar-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.month-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.nav-arrows {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.nav-btn:hover {
+  background: var(--bg-subtle);
+  color: var(--primary);
+  border-color: var(--primary-border);
+}
+
+/* Grid Kalender */
+.calendar-wrapper {
+  margin-bottom: 1.25rem;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.weekday {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.weekday.weekend {
+  color: #f43f5e;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.day-cell {
+  aspect-ratio: 1 / 1;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-fast);
+  user-select: none;
+  border: 1px solid transparent;
+  background-color: transparent;
+}
+
+.day-cell:hover:not(.empty) {
+  background-color: var(--primary-light);
+  border-color: var(--primary-border);
+  transform: translateY(-1px);
+}
+
+.day-number {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.day-cell.other-month .day-number {
+  color: var(--text-light);
+}
+
+/* Hari Ini */
+.day-cell.today {
+  font-weight: 800;
+  background-color: #f0fdf4;
+  border-color: #86efac;
+  position: relative;
+}
+
+.day-cell.today .day-number {
+  color: var(--primary);
+}
+
+/* Penanda visual persisten 'Hari Ini' (tetap tampak saat hari ini dipilih / tidak dipilih) */
+.day-cell.today::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  box-shadow: 0 0 0 1.5px #ffffff;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Tanggal Dipilih (Active) */
+.day-cell.selected {
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+  border-color: var(--primary-hover) !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+  transform: scale(1.02);
+}
+
+.day-cell.selected .day-number {
+  color: #ffffff !important;
+}
+
+/* Penanda persisten Hari Ini saat berstatus Dipilih (Selected): kontras putih bersih */
+.day-cell.today.selected::after {
+  background-color: #ffffff;
+  box-shadow: 0 0 0 1.5px rgba(5, 150, 105, 0.9);
+}
+
+/* Titik Indikator Kegiatan */
+.day-indicators {
+  position: absolute;
+  bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.event-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  box-sizing: border-box;
+}
+
+/* Titik Kegiatan Tentatif / Rencana: Outlined ring */
+.event-dot.dot-tentative {
+  background-color: transparent;
+  border: 1.5px solid var(--warning);
+}
+
+.day-cell.selected .event-dot {
+  background-color: #ffffff;
+}
+
+.day-cell.selected .event-dot.dot-tentative {
+  background-color: transparent;
+  border: 1.5px solid #ffffff;
+  opacity: 0.9;
+}
+
+.day-cell.has-events:not(.selected) {
+  background-color: #f0fdf4;
+}
+
+/* Legend Kalender */
+.calendar-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+/* Swatch Legend Hari Ini: Latar hijau muda dengan dot persisten di sudut */
+.legend-today {
+  background-color: #f0fdf4;
+  border: 1.5px solid #86efac;
+  position: relative;
+}
+
+.legend-today::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background-color: var(--primary);
+}
+
+.legend-selected {
+  background-color: var(--primary);
+}
+
+.legend-has-event {
+  background-color: var(--accent);
+  border-radius: 50%;
+}
+
+.legend-tentative {
+  background-color: transparent;
+  border: 1.5px solid var(--warning);
+  border-radius: 50%;
+}
+
+/* ==========================================================================
+   CARD: KEGIATAN MENDATANG (UPCOMING)
+   ========================================================================== */
+.upcoming-card {
+  padding: 1.25rem 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-title-group h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.count-badge {
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+}
+
+.count-badge-emerald {
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
+  font-size: 0.775rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+}
+
+.upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.upcoming-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  gap: 0.75rem;
+}
+
+.upcoming-item:hover {
+  background: #ffffff;
+  border-color: var(--border-light);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(3px);
+}
+
+.upcoming-item.status-tentative {
+  border-left: 3px dashed var(--warning);
+}
+
+.upcoming-item.status-tentative .date-pill-day {
+  color: #b45309;
+}
+
+.upcoming-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.date-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.6rem;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.date-pill-day {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+
+.date-pill-month {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.upcoming-item-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.upcoming-item-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upcoming-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  min-width: 0;
+}
+
+.upcoming-item-meta span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ==========================================================================
+   CARD: AGENDA TANGGAL TERPILIH
+   ========================================================================== */
+.agenda-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+}
+
+.agenda-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.agenda-subtitle {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 0.08em;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.selected-date-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.agenda-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
+.agenda-body {
+  flex: 1;
+}
+
+.event-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Kartu Kegiatan Spesifik */
+.event-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 1.125rem 1.25rem;
+  box-shadow: var(--shadow-xs);
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.event-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-border);
+  border-left-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+/* Status Tentatif: Dashed left border menggunakan aksen warning */
+.event-card.status-tentative {
+  border-left: 4px dashed var(--warning);
+  background: linear-gradient(to right, #fffdfa 0%, #ffffff 8%);
+}
+
+.event-card.status-tentative:hover {
+  border-color: #fde68a;
+  border-left: 4px dashed var(--warning);
+}
+
+/* Badge Status Event */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  line-height: 1.2;
+}
+
+.status-badge-confirmed {
+  background-color: var(--primary-light);
+  color: var(--primary-hover);
+  border: 1px solid var(--primary-border);
+}
+
+.status-badge-tentative {
+  background-color: var(--warning-light);
+  color: #b45309;
+  border: 1px dashed var(--warning);
+}
+
+.event-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  min-width: 0;
+}
+
+.event-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.35;
+  min-width: 0;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.action-btn:hover {
+  background: var(--bg-subtle);
+  color: var(--text-main);
+}
+
+.action-btn.edit-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary-border);
+  background: var(--primary-light);
+}
+
+.action-btn.delete-btn:hover {
+  color: var(--danger);
+  border-color: var(--danger-border);
+  background: var(--danger-light);
+}
+
+.event-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 0.875rem;
+  word-break: break-word;
+}
+
+.event-meta-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.meta-item span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.meta-item svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+}
+
+.empty-state-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.empty-state h4 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  max-width: 320px;
+  margin-bottom: 1.25rem;
+}
+
+/* ==========================================================================
+   MODAL DIALOG
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  z-index: 100;
+  transition: opacity var(--transition-normal);
+  overflow-y: auto;
+}
+
+.modal-dialog {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 540px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: auto;
+}
+
+.modal-dialog>form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.modal-dialog.modal-sm {
+  max-width: 440px;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.modal-header h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.modal-header-danger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.danger-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--danger-light);
+  color: var(--danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.modal-close:hover {
+  color: var(--text-main);
+  background: var(--bg-subtle);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-footer {
+  padding: 1rem 1.5rem;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   FORM CONTROLS
+   ========================================================================== */
+.form-group {
+  margin-bottom: 1.125rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.375rem;
+}
+
+.form-label .required {
+  color: var(--danger);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  background-color: var(--bg-input);
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.form-control:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.form-control::placeholder {
+  color: var(--text-light);
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.col-half {
+  flex: 1;
+}
+
+.input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 0.875rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.form-control.with-icon {
+  padding-left: 2.35rem;
+}
+
+/* Fallback native select styling jika digunakan */
+select.form-control {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 16px;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   CUSTOM DROPDOWN (STATUS KEGIATAN)
+   ========================================================================== */
+.custom-select-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: var(--bg-card);
+  user-select: none;
+  gap: 0.5rem;
+  padding: 0.55rem 0.875rem;
+}
+
+.custom-select-trigger:focus,
+.custom-select-trigger.active {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.custom-select-value {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.status-option-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.2rem 0.625rem;
+  border-radius: var(--radius-full);
+}
+
+.custom-select-arrow {
+  color: var(--text-secondary);
+  transition: transform var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.custom-select-wrap.open .custom-select-arrow {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+.custom-select-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: #ffffff;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xl);
+  list-style: none;
+  margin: 0;
+  padding: 0.375rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  animation: dropdownIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.custom-select-options.hidden {
+  display: none;
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.custom-select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: var(--text-main);
+  outline: none;
+}
+
+.custom-select-option:hover,
+.custom-select-option:focus-visible {
+  background-color: var(--primary-light);
+  color: var(--primary-text);
+}
+
+.custom-select-option.selected {
+  background-color: #ecfdf5;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.status-indicator-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-indicator-dot.dot-confirmed {
+  background-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
+}
+
+.status-indicator-dot.dot-tentative {
+  background-color: transparent;
+  border: 2px solid var(--warning);
+}
+
+.option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.option-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.option-desc {
+  font-size: 0.725rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.custom-select-option:hover .option-desc,
+.custom-select-option.selected .option-desc {
+  color: var(--primary-text);
+  opacity: 0.85;
+}
+
+.option-check {
+  color: var(--primary);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.custom-select-option.selected .option-check {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   FLATPICKR EMERALD THEME OVERRIDES
+   ========================================================================== */
+.flatpickr-calendar {
+  font-family: inherit !important;
+  background: #ffffff !important;
+  border: 1.5px solid var(--border-light) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-xl) !important;
+  color: var(--text-main) !important;
+  padding: 0.625rem 0.5rem !important;
+  box-sizing: border-box !important;
+  z-index: 1000 !important;
+}
+
+.flatpickr-calendar::before,
+.flatpickr-calendar::after {
+  display: none !important;
+}
+
+/* Header Flatpickr */
+.flatpickr-months {
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.flatpickr-months .flatpickr-month {
+  height: 38px !important;
+  color: var(--text-main) !important;
+  fill: var(--text-main) !important;
+}
+
+.flatpickr-current-month {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.flatpickr-current-month .cur-month {
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+  margin-left: 0.25rem !important;
+}
+
+.flatpickr-current-month input.cur-year {
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+  padding: 0.35rem !important;
+  color: var(--text-secondary) !important;
+  fill: var(--text-secondary) !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all var(--transition-fast) !important;
+  height: 32px !important;
+  width: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover {
+  background-color: var(--primary-light) !important;
+  color: var(--primary) !important;
+  fill: var(--primary) !important;
+}
+
+/* Hari dalam Pekan (Weekdays) */
+span.flatpickr-weekday {
+  font-weight: 700 !important;
+  color: var(--text-muted) !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+}
+
+/* Hari Grid Kalender */
+.flatpickr-day {
+  border-radius: var(--radius-sm) !important;
+  font-weight: 600 !important;
+  color: var(--text-main) !important;
+  border-color: transparent !important;
+  transition: all var(--transition-fast) !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  max-width: 34px !important;
+  margin: 2px !important;
+}
+
+.flatpickr-day:hover {
+  background: var(--primary-light) !important;
+  border-color: var(--primary-border) !important;
+  color: var(--primary-text) !important;
+}
+
+/* Hari Ini di Flatpickr */
+.flatpickr-day.today {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+  color: var(--primary) !important;
+  font-weight: 800 !important;
+}
+
+/* Hari Terpilih di Flatpickr */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected:focus,
+.flatpickr-day.selected:hover,
+.flatpickr-day.prevMonthDay.selected,
+.flatpickr-day.nextMonthDay.selected {
+  background: var(--primary) !important;
+  border-color: var(--primary-hover) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35) !important;
+  font-weight: 700 !important;
+}
+
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+  color: var(--text-light) !important;
+}
+
+/* Time Picker Flatpickr Theme */
+.flatpickr-time {
+  max-height: 48px !important;
+  line-height: 48px !important;
+  border-top: 1px solid var(--border-light) !important;
+  background: #ffffff !important;
+  border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
+}
+
+.flatpickr-time input {
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+  font-size: 1.05rem !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.flatpickr-time input:hover,
+.flatpickr-time input:focus {
+  background-color: var(--primary-light) !important;
+  color: var(--primary) !important;
+}
+
+.flatpickr-time .flatpickr-time-separator {
+  color: var(--text-muted) !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+}
+
+.flatpickr-time .numInputWrapper span.arrowUp:after {
+  border-bottom-color: var(--text-secondary) !important;
+}
+
+.flatpickr-time .numInputWrapper span.arrowDown:after {
+  border-top-color: var(--text-secondary) !important;
+}
+
+.flatpickr-time .numInputWrapper:hover span {
+  background: var(--primary-light) !important;
+}
+
+.flatpickr-time .numInputWrapper:hover span.arrowUp:after {
+  border-bottom-color: var(--primary) !important;
+}
+
+.flatpickr-time .numInputWrapper:hover span.arrowDown:after {
+  border-top-color: var(--primary) !important;
+}
+
+/* Khusus popup time-only Flatpickr */
+.flatpickr-calendar.noCalendar {
+  width: auto !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.flatpickr-calendar.noCalendar .flatpickr-time {
+  border-top: none !important;
+}
+
+/* Custom cursor & clickability on Flatpickr inputs */
+.flatpickr-input-custom {
+  cursor: pointer !important;
+  background-color: #ffffff !important;
+}
+
+/* Pesan Alert dalam Form */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  margin-bottom: 1.25rem;
+}
+
+.alert-danger {
+  background: var(--danger-light);
+  border: 1px solid var(--danger-border);
+  color: var(--danger);
+}
+
+.delete-target-preview {
+  margin-top: 0.75rem;
+  padding: 0.875rem;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--danger);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.delete-target-preview strong {
+  color: var(--text-main);
+}
+
+.delete-target-preview span {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+/* Spinner Tombol */
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   TOAST NOTIFICATION
+   ========================================================================== */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #ffffff;
+  color: var(--text-main);
+  padding: 0.875rem 1.25rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-light);
+  font-size: 0.875rem;
+  font-weight: 500;
+  max-width: 380px;
+  animation: toastIn 0.25s ease-out;
+  transition: all var(--transition-fast);
+}
+
+.toast.toast-hiding {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.toast-success {
+  border-left: 4px solid var(--accent);
+}
+
+.toast-success svg {
+  color: var(--accent);
+}
+
+.toast-error {
+  border-left: 4px solid var(--danger);
+}
+
+.toast-error svg {
+  color: var(--danger);
+}
+
+.toast-info {
+  border-left: 4px solid var(--info);
+}
+
+.toast-info svg {
+  color: var(--info);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ==========================================================================
+   MOBILE FLOATING ACTION BUTTON (FAB)
+   ========================================================================== */
+.mobile-fab {
+  display: none;
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 16px rgba(5, 150, 105, 0.4);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  transition: all var(--transition-fast);
+}
+
+.mobile-fab:active {
+  transform: scale(0.92);
+}
+
+/* Utilities */
+.hidden {
+  display: none !important;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-sm {
+  font-size: 0.8125rem;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (BREAKPOINTS)
+   ========================================================================== */
+@media (max-width: 960px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agenda-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+
+  /* Layout & Container */
+  .container {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+  }
+
+  .app-main {
+    padding-top: 1rem;
+    padding-bottom: 5.5rem;
+  }
+
+  .dashboard-grid {
+    gap: 1.125rem;
+  }
+
+  /* Header & Branding */
+  .header-container {
+    padding: 0.625rem 0.875rem;
+    gap: 0.5rem;
+  }
+
+  .header-brand {
+    gap: 0.625rem;
+    min-width: 0;
+  }
+
+  .brand-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+  }
+
+  .brand-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .brand-text {
+    min-width: 0;
+  }
+
+  .brand-text h1 {
+    font-size: 1.125rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .brand-text p {
+    display: none;
+  }
+
+  .header-actions {
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  #openAddModalBtn {
+    display: none !important;
+  }
+
+  .btn-text-desktop {
+    display: none;
+  }
+
+  /* Status badge: fit-content, jangan pernah stretch full width */
+  .badge-status {
+    padding: 0.35rem 0.625rem;
+    font-size: 0.75rem;
+    width: fit-content;
+    max-width: 160px;
+    flex: 0 0 auto;
+  }
+
+  .badge-status .status-text {
+    max-width: 125px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+  }
+
+  .btn {
+    min-height: 40px;
+  }
+
+  .btn-sm {
+    min-height: 40px;
+    min-width: 40px;
+    padding: 0.45rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+
+  .btn-icon {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0.5rem;
+  }
+
+  .nav-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .action-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .modal-close {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+  }
+
+  .calendar-card {
+    padding: 1rem 0.875rem;
+  }
+
+  .calendar-card-header {
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+  }
+
+  .month-title {
+    font-size: 1.125rem;
+  }
+
+  .calendar-weekdays {
+    margin-bottom: 0.375rem;
+  }
+
+  .weekday {
+    font-size: 0.75rem;
+    padding: 0.35rem 0;
+  }
+
+  .calendar-days {
+    gap: 4px;
+  }
+
+  .day-cell {
+    min-height: 40px;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-sm);
+    padding: 2px;
+  }
+
+  .day-number {
+    font-size: 0.875rem;
+  }
+
+  .day-indicators {
+    bottom: 4px;
+    gap: 2.5px;
+  }
+
+  .event-dot {
+    width: 4.5px;
+    height: 4.5px;
+  }
+
+  .calendar-legend {
+    gap: 0.75rem 1rem;
+    font-size: 0.75rem;
+    padding-top: 0.875rem;
+  }
+
+  .agenda-card {
+    padding: 1rem 0.875rem;
+  }
+
+  .agenda-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .selected-date-title {
+    font-size: 1.15rem;
+    word-break: break-word;
+  }
+
+  .agenda-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .event-card {
+    padding: 1rem;
+  }
+
+  .event-card-header {
+    gap: 0.5rem;
+  }
+
+  .event-title {
+    font-size: 1rem;
+  }
+
+  .event-actions {
+    gap: 0.5rem;
+  }
+
+  .upcoming-card {
+    padding: 1rem 0.875rem;
+  }
+
+  .upcoming-item {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .modal-backdrop {
+    padding: 0.75rem 0.5rem;
+    align-items: center;
+  }
+
+  .modal-dialog {
+    width: 100%;
+    max-width: 100%;
+    margin: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  @supports (height: 100dvh) {
+    .modal-dialog {
+      max-height: calc(100dvh - 1.5rem);
+    }
+  }
+
+  .modal-header {
+    padding: 1rem 1.125rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1.05rem;
+  }
+
+  .modal-body {
+    padding: 1rem 1.125rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-control {
+    font-size: 16px;
+    min-height: 42px;
+  }
+
+  .modal-footer {
+    padding: 0.875rem 1.125rem;
+    gap: 0.625rem;
+  }
+
+  .modal-footer .btn {
+    flex: 1;
+    min-height: 42px;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .modal-dialog.modal-sm {
+    max-width: 100%;
+  }
+
+  .mobile-fab {
+    display: flex;
+    bottom: 1.25rem;
+    right: 1.25rem;
+  }
+
+  .toast-container {
+    left: 1rem;
+    right: 1rem;
+    bottom: 5.25rem;
+  }
+
+  .toast {
+    max-width: 100%;
+  }
+}
+
+/* ==========================================================================
+   BREAKPOINT UNTUK LAYAR SANGAT KECIL (<= 380px)
+   Mencakup iPhone SE gen 1/2/3, Galaxy S compact, resolusi 360px - 375px
+   ========================================================================== */
+@media (max-width: 380px) {
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  /* HEADER: tetap horizontal & rapi, badge status TIDAK stretch full width */
+  .header-container {
+    padding: 0.5rem 0.625rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .header-brand {
+    justify-content: flex-start;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .brand-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand-text h1 {
+    font-size: 1.05rem;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  /* FIX UTAMA: badge status hanya selebar kontennya sendiri, tidak stretch */
+  .badge-status {
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: 100%;
+    justify-content: center;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.7rem;
+    gap: 0.35rem;
+  }
+
+  .badge-status .status-text {
+    max-width: 105px;
+  }
+
+  .badge-status .status-dot {
+    width: 7px;
+    height: 7px;
+    flex-shrink: 0;
+  }
+
+  .calendar-card {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .calendar-card-header {
+    gap: 0.35rem;
+  }
+
+  .month-title {
+    font-size: 1rem;
+  }
+
+  .nav-btn {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .weekday {
+    font-size: 0.7rem;
+    padding: 0.25rem 0;
+  }
+
+  .calendar-days {
+    gap: 3px;
+  }
+
+  .day-cell {
+    min-height: 38px;
+    border-radius: 6px;
+    padding: 2px 1px;
+  }
+
+  .day-number {
+    font-size: 0.8125rem;
+  }
+
+  .day-indicators {
+    bottom: 3px;
+    gap: 2px;
+  }
+
+  .event-dot {
+    width: 4px;
+    height: 4px;
+  }
+
+  .calendar-legend {
+    gap: 0.4rem 0.625rem;
+    font-size: 0.7rem;
+  }
+
+  .modal-backdrop {
+    padding: 0.5rem 0.375rem;
+  }
+
+  .modal-dialog {
+    border-radius: var(--radius-md);
+  }
+
+  .modal-header {
+    padding: 0.875rem 0.875rem;
+  }
+
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .modal-body {
+    padding: 0.875rem 0.875rem;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 0.875rem;
+    gap: 0.5rem;
+  }
+
+  .modal-footer .btn {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .agenda-card,
+  .upcoming-card {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .selected-date-title {
+    font-size: 1.05rem;
+  }
+
+  .event-card {
+    padding: 0.75rem;
+  }
+
+  .action-btn {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .date-pill {
+    min-width: 42px;
+    padding: 0.25rem 0.4rem;
+  }
+
+  .date-pill-day {
+    font-size: 1rem;
+  }
+
+  .date-pill-month {
+    font-size: 0.625rem;
+  }
+}

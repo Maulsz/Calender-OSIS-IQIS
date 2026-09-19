@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalender Kegiatan - Jadwal Program Kerja Osis</title>
+  <meta name="description"
+    content="Aplikasi Kalender Kegiatan sekolah dengan fitur CRUD lengkap terhubung ke Google Sheets.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <!-- Top Navigation / App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <path d="M9 16l2 2 4-4"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Kalender Kegiatan OSIS</h1>
+          <p>Jadwal Program Kerja Osis</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Status koneksi backend -->
+        <div id="connectionBadge" class="badge-status status-loading" title="Status koneksi data">
+          <span class="status-dot"></span>
+          <span class="status-text">Memuat data...</span>
+        </div>
+
+        <!-- Tombol Segarkan Data -->
+        <button id="refreshBtn" class="btn btn-secondary btn-icon hidden" title="Segarkan Data Kegiatan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+          </svg>
+          <span class="btn-text-desktop">Segarkan</span>
+        </button>
+
+        <!-- Tombol Tambah Kegiatan -->
+        <button id="openAddModalBtn" class="btn btn-primary hidden" title="Tambah Kegiatan Baru">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Tambah Kegiatan</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="app-main container">
+    <div class="dashboard-grid">
+
+      <!-- Kolom Kiri: Kalender Bulan & Kegiatan Mendatang -->
+      <section class="col-left">
+
+        <!-- Card: Jam Makassar (WITA) -->
+        <div class="card clock-card">
+          <div class="clock-icon-wrap">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div class="clock-info">
+            <span class="clock-label">Waktu Makassar &middot; WITA</span>
+            <div id="makassarTime" class="clock-time">--:--:--</div>
+            <div id="makassarDate" class="clock-date">Memuat...</div>
+          </div>
+        </div>
+
+        <!-- Card: Kalender Bulanan -->
+        <div class="card calendar-card">
+          <div class="calendar-card-header">
+            <div class="month-selector">
+              <h2 id="calendarMonthYear" class="month-title">September 2026</h2>
+              <div class="nav-arrows">
+                <button id="prevMonthBtn" class="nav-btn" aria-label="Bulan sebelumnya" title="Bulan Sebelumnya">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+                <button id="nextMonthBtn" class="nav-btn" aria-label="Bulan berikutnya" title="Bulan Berikutnya">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <button id="todayBtn" class="btn btn-sm btn-outline" title="Kembali ke Hari Ini">
+              Hari Ini
+            </button>
+          </div>
+
+          <!-- Kalender Grid -->
+          <div class="calendar-wrapper">
+            <!-- Header Hari: Min - Sab -->
+            <div class="calendar-weekdays">
+              <span class="weekday weekend">Min</span>
+              <span class="weekday">Sen</span>
+              <span class="weekday">Sel</span>
+              <span class="weekday">Rab</span>
+              <span class="weekday">Kam</span>
+              <span class="weekday">Jum</span>
+              <span class="weekday weekend">Sab</span>
+            </div>
+
+            <!-- Kontainer Grid Hari (Di-generate oleh JS) -->
+            <div id="calendarDays" class="calendar-days">
+              <!-- Kotak hari akan dibuat dinamis melalui script.js -->
+            </div>
+          </div>
+
+          <!-- Keterangan Legend Kalender -->
+          <div class="calendar-legend">
+            <div class="legend-item">
+              <span class="legend-indicator legend-today"></span>
+              <span>Hari Ini</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-indicator legend-selected"></span>
+              <span>Dipilih</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-indicator legend-has-event"></span>
+              <span>Ada Kegiatan</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-indicator legend-tentative"></span>
+              <span>Rencana</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card: Kegiatan Mendatang (Upcoming Events) -->
+        <div class="card upcoming-card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </div>
+              <h3>Kegiatan Mendatang</h3>
+            </div>
+            <span id="upcomingBadge" class="count-badge">0 Kegiatan</span>
+          </div>
+
+          <div class="card-body">
+            <div id="upcomingList" class="upcoming-list">
+              <!-- Item kegiatan mendatang akan di-render di sini -->
+            </div>
+            <button id="toggleUpcomingBtn" class="btn btn-text btn-block hidden" style="margin-top: 0.75rem;">
+              Lihat Lainnya
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Kolom Kanan: Detail Agenda Tanggal Terpilih -->
+      <section class="col-right">
+        <div class="card agenda-card">
+          <div class="agenda-header">
+            <div class="agenda-title-wrap">
+              <span class="agenda-subtitle">AGENDA KEGIATAN</span>
+              <h2 id="selectedDateTitle" class="selected-date-title">Kamis, 17 September 2026</h2>
+            </div>
+            <div class="agenda-meta">
+              <span id="selectedDateBadge" class="count-badge-emerald">0 Kegiatan</span>
+              <button id="quickAddBtn" class="btn btn-sm btn-primary" title="Tambah Kegiatan di Tanggal Ini">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Tambah</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Daftar Kartu Kegiatan Pada Tanggal Ini -->
+          <div class="agenda-body">
+            <div id="selectedDateList" class="event-cards-container">
+              <!-- Kartu kegiatan spesifik tanggal akan dimuat di sini -->
+            </div>
+
+            <!-- Empty State jika tidak ada kegiatan di tanggal terpilih -->
+            <div id="emptyAgendaState" class="empty-state hidden">
+              <div class="empty-state-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <circle cx="12" cy="15" r="2"></circle>
+                </svg>
+              </div>
+              <h4>Tidak Ada Kegiatan</h4>
+              <p>Belum ada jadwal kegiatan untuk tanggal ini. Anda dapat membuat agenda baru sekarang.</p>
+              <button id="emptyStateAddBtn" class="btn btn-outline-primary">
+                + Jadwalkan Kegiatan Baru
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modal Dialog: Tambah / Edit Kegiatan -->
+  <div id="eventModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalTitle">Tambah Kegiatan Baru</h3>
+        <button id="closeModalBtn" class="modal-close" aria-label="Tutup formulir">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form id="eventForm" novalidate>
+        <input type="hidden" id="eventId" name="id" value="">
+
+        <div class="modal-body">
+          <!-- Pesan Error Validasi Form -->
+          <div id="formAlert" class="alert alert-danger hidden">
+            <span id="formAlertText">Silakan periksa input form.</span>
+          </div>
+
+          <!-- Field Judul -->
+          <div class="form-group">
+            <label for="eventJudul" class="form-label">
+              Judul Kegiatan <span class="required">*</span>
+            </label>
+            <input type="text" id="eventJudul" class="form-control"
+              placeholder="Contoh: Rapat Koordinasi Uji Kompetensi RPL" required maxlength="120">
+          </div>
+
+          <!-- Field Deskripsi -->
+          <div class="form-group">
+            <label for="eventDeskripsi" class="form-label">
+              Deskripsi / Catatan Tambahan
+            </label>
+            <textarea id="eventDeskripsi" class="form-control" rows="3"
+              placeholder="Tuliskan keterangan detail, agenda pembahasan, atau perlengkapan yang perlu dibawa..."></textarea>
+          </div>
+
+          <!-- Field Lokasi -->
+          <div class="form-group">
+            <label for="eventLokasi" class="form-label">
+              Lokasi Kegiatan <span class="required">*</span>
+            </label>
+            <div class="input-icon-wrap">
+              <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <input type="text" id="eventLokasi" class="form-control with-icon"
+                placeholder="Contoh: Lab RPL 2 / Aula Graha Bhakti" required maxlength="100">
+            </div>
+          </div>
+
+          <!-- Field Status Kegiatan (Custom Dropdown) -->
+          <div class="form-group">
+            <label id="eventStatusLabel" class="form-label">
+              Status Kegiatan <span class="required">*</span>
+            </label>
+            <input type="hidden" id="eventStatus" name="status" value="confirmed">
+            <div class="custom-select-wrap" id="customStatusDropdown">
+              <button type="button" class="custom-select-trigger form-control" id="customStatusTrigger"
+                aria-haspopup="listbox" aria-expanded="false" aria-labelledby="eventStatusLabel">
+                <span class="custom-select-value">
+                  <span class="status-option-badge status-badge-confirmed">Terkonfirmasi (Pasti)</span>
+                </span>
+                <svg class="custom-select-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              <ul class="custom-select-options hidden" id="customStatusOptions" role="listbox" tabindex="-1">
+                <li class="custom-select-option selected" role="option" data-value="confirmed" aria-selected="true"
+                  tabindex="0">
+                  <span class="status-indicator-dot dot-confirmed"></span>
+                  <div class="option-text">
+                    <span class="option-title">Terkonfirmasi (Pasti)</span>
+                    <span class="option-desc">Kegiatan sudah terverifikasi dan dijadwalkan pasti</span>
+                  </div>
+                  <svg class="option-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </li>
+                <li class="custom-select-option" role="option" data-value="tentative" aria-selected="false"
+                  tabindex="0">
+                  <span class="status-indicator-dot dot-tentative"></span>
+                  <div class="option-text">
+                    <span class="option-title">Rencana (Tentatif)</span>
+                    <span class="option-desc">Jadwal masih sementara atau dalam perencanaan</span>
+                  </div>
+                  <svg class="option-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Row: Tanggal Mulai & Tanggal Selesai -->
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="eventTanggalMulai" class="form-label">
+                Tanggal Mulai <span class="required">*</span>
+              </label>
+              <div class="input-icon-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <input type="text" id="eventTanggalMulai" class="form-control with-icon flatpickr-input-custom"
+                  placeholder="Pilih tanggal mulai" required readonly>
+              </div>
+            </div>
+            <div class="form-group col-half">
+              <label for="eventTanggalSelesai" class="form-label">
+                Tanggal Selesai <span class="required">*</span>
+              </label>
+              <div class="input-icon-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <input type="text" id="eventTanggalSelesai" class="form-control with-icon flatpickr-input-custom"
+                  placeholder="Pilih tanggal selesai" required readonly>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row: Jam Mulai & Jam Selesai -->
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="eventJamMulai" class="form-label">
+                Jam Mulai <span class="required">*</span>
+              </label>
+              <div class="input-icon-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <input type="text" id="eventJamMulai" class="form-control with-icon flatpickr-input-custom"
+                  placeholder="08:00" required readonly>
+              </div>
+            </div>
+            <div class="form-group col-half">
+              <label for="eventJamSelesai" class="form-label">
+                Jam Selesai <span class="required">*</span>
+              </label>
+              <div class="input-icon-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <input type="text" id="eventJamSelesai" class="form-control with-icon flatpickr-input-custom"
+                  placeholder="10:00" required readonly>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelModalBtn" class="btn btn-secondary">Batal</button>
+          <button type="submit" id="saveEventBtn" class="btn btn-primary">
+            <span class="btn-text">Simpan Kegiatan</span>
+            <span class="btn-spinner hidden"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus -->
+  <div id="deleteModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-header modal-header-danger">
+        <div class="danger-icon-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h3>Hapus Kegiatan?</h3>
+      </div>
+      <div class="modal-body">
+        <p>Apakah Anda yakin ingin menghapus agenda kegiatan berikut?</p>
+        <div class="delete-target-preview">
+          <strong id="deleteTargetTitle">-</strong>
+          <span id="deleteTargetDate">-</span>
+        </div>
+        <p class="text-muted text-sm" style="margin-top: 0.5rem;">Data yang telah dihapus tidak dapat dipulihkan kembali
+          dari spreadsheet.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelDeleteBtn" class="btn btn-secondary">Batal</button>
+        <button id="confirmDeleteBtn" class="btn btn-danger">
+          <span class="btn-text">Ya, Hapus</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Floating Action Button (FAB) -->
+  <button id="mobileFabBtn" class="mobile-fab" title="Tambah Kegiatan Baru">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Flatpickr Library & Indonesian Locale -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
+  <!-- Script Logic -->
+  <script src="script.js"></script>
+</body>
+
+</html>
