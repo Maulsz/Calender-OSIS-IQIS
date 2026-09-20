@@ -1961,7 +1961,7 @@ span.flatpickr-weekday {
 
   .app-main {
     padding-top: 1rem;
-    padding-bottom: 5.5rem;
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
   }
 
   .dashboard-grid {
@@ -2165,7 +2165,7 @@ span.flatpickr-weekday {
   }
 
   .upcoming-card {
-    padding: 1rem 0.875rem;
+    padding: 1rem 0.875rem 1.25rem;
   }
 
   .upcoming-item {
@@ -2232,14 +2232,15 @@ span.flatpickr-weekday {
 
   .mobile-fab {
     display: flex;
-    bottom: 1.25rem;
-    right: 1.25rem;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    right: calc(1.25rem + env(safe-area-inset-right, 0px));
+    z-index: 50;
   }
 
   .toast-container {
     left: 1rem;
     right: 1rem;
-    bottom: 5.25rem;
+    bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
   }
 
   .toast {
@@ -2392,9 +2393,13 @@ span.flatpickr-weekday {
     font-size: 0.8125rem;
   }
 
+  .app-main {
+    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .agenda-card,
   .upcoming-card {
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 0.5rem 1.25rem;
   }
 
   .selected-date-title {
