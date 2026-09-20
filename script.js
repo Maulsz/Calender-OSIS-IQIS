@@ -1220,23 +1220,41 @@ const Modal = {
 // ==========================================================================
 // LOGIKA BISNIS & HANDLER CRUD
 // ==========================================================================
-async function loadEventsData() {
+async function loadEventsData(isSilent = false) {
   try {
-    AppState.isLoading = true;
-    UI.updateConnectionBadge();
+    if (!isSilent) {
+      AppState.isLoading = true;
+      UI.updateConnectionBadge();
+    }
 
     const data = await ApiClient.getAllEvents();
     AppState.events = Array.isArray(data) ? data : [];
 
+    // Render ulang tampilan dengan tetap mempertahankan AppState (selectedDate, viewYear, viewMonth)
     UI.renderCalendar();
     UI.renderSelectedDateAgenda();
     UI.renderUpcomingEvents();
+
+    if (isSilent) {
+      UI.updateConnectionBadge();
+    }
   } catch (error) {
     console.error("Gagal memuat kegiatan:", error);
-    Toast.show(error.message || "Gagal mengambil data kegiatan", "error");
+    if (isSilent) {
+      const badge = document.getElementById("connectionBadge");
+      if (badge) {
+        badge.className = "badge-status status-error";
+        badge.innerHTML = `<span class="status-dot"></span><span class="status-text">Sinkronisasi Gagal</span>`;
+        badge.title = "Gagal memperbarui data kegiatan otomatis di latar belakang.";
+      }
+    } else {
+      Toast.show(error.message || "Gagal mengambil data kegiatan", "error");
+    }
   } finally {
-    AppState.isLoading = false;
-    UI.updateConnectionBadge();
+    if (!isSilent) {
+      AppState.isLoading = false;
+      UI.updateConnectionBadge();
+    }
   }
 }
 
@@ -1476,14 +1494,131 @@ function initializeEvents() {
 }
 
 // ==========================================================================
+// PENGATUR TEMA (LIGHT / DARK MODE)
+// ==========================================================================
+const ThemeManager = {
+  STORAGE_KEY: "theme-preference",
+  currentTheme: "light",
+
+  init() {
+    const toggleBtn = document.getElementById("themeToggleBtn");
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", () => this.toggleTheme());
+    }
+
+    // 1. Baca preferensi tersimpan dari localStorage
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    if (saved === "dark" || saved === "light") {
+      this.applyTheme(saved, false);
+    } else {
+      // 2. Fallback ke preferensi sistem peramban (OS/browser)
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      this.applyTheme(prefersDark ? "dark" : "light", false);
+    }
+
+    // Dengarkan perubahan prefers-color-scheme otomatis dari OS jika user belum memilih secara eksplisit
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+        if (!localStorage.getItem(this.STORAGE_KEY)) {
+          this.applyTheme(e.matches ? "dark" : "light", false);
+        }
+      });
+    }
+  },
+
+  applyTheme(theme, save = true) {
+    this.currentTheme = theme;
+    const isDark = theme === "dark";
+
+    if (isDark) {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+
+    if (save) {
+      try {
+        localStorage.setItem(this.STORAGE_KEY, theme);
+      } catch (e) {
+        console.warn("Gagal menyimpan preferensi tema:", e);
+      }
+    }
+
+    this.updateToggleIcon(isDark);
+  },
+
+  toggleTheme() {
+    const nextTheme = this.currentTheme === "dark" ? "light" : "dark";
+    this.applyTheme(nextTheme, true);
+  },
+
+  updateToggleIcon(isDark) {
+    const toggleBtn = document.getElementById("themeToggleBtn");
+    if (!toggleBtn) return;
+
+    const sunIcon = toggleBtn.querySelector(".theme-icon-sun");
+    const moonIcon = toggleBtn.querySelector(".theme-icon-moon");
+
+    if (isDark) {
+      if (sunIcon) sunIcon.classList.remove("hidden");
+      if (moonIcon) moonIcon.classList.add("hidden");
+      toggleBtn.title = "Ganti ke Mode Terang";
+      toggleBtn.setAttribute("aria-label", "Ganti ke Mode Terang");
+    } else {
+      if (sunIcon) sunIcon.classList.add("hidden");
+      if (moonIcon) moonIcon.classList.remove("hidden");
+      toggleBtn.title = "Ganti ke Mode Gelap";
+      toggleBtn.setAttribute("aria-label", "Ganti ke Mode Gelap");
+    }
+  }
+};
+
+// ==========================================================================
+// AUTO-REFRESH (BACKGROUND POLLING)
+// ==========================================================================
+const AutoRefresh = {
+  intervalId: null,
+  POLL_INTERVAL_MS: 20000, // Sinkronisasi berkala tiap 20 detik
+
+  /**
+   * Cek apakah ada modal dialog yang sedang terbuka (form Tambah/Edit atau Hapus)
+   */
+  isModalOpen() {
+    const eventModal = document.getElementById("eventModal");
+    const deleteModal = document.getElementById("deleteModal");
+    const isEventModalOpen = eventModal && !eventModal.classList.contains("hidden");
+    const isDeleteModalOpen = deleteModal && !deleteModal.classList.contains("hidden");
+    return isEventModalOpen || isDeleteModalOpen;
+  },
+
+  /**
+   * Eksekusi polling data kegiatan di latar belakang
+   */
+  tick() {
+    // Lewati polling jika pengguna sedang mengisi formulir atau mengonfirmasi aksi
+    if (this.isModalOpen()) {
+      return;
+    }
+    // Panggil loadEventsData secara hening (isSilent = true)
+    loadEventsData(true);
+  },
+
+  init() {
+    if (this.intervalId) clearInterval(this.intervalId);
+    this.intervalId = setInterval(() => this.tick(), this.POLL_INTERVAL_MS);
+  }
+};
+
+// ==========================================================================
 // ENTRY POINT (SAAT HALAMAN SELESAI DIMUAT)
 // ==========================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  // Inisialisasi controller custom controls
+  // Inisialisasi controller tema & form controls
+  ThemeManager.init();
   StatusDropdown.init();
   FormPickers.init();
 
-  // Inisialisasi tanggal terpilih ke hari ini (atau default September 2026 jika testing masa datang)
+  // Inisialisasi tanggal terpilih ke hari ini
   const today = new Date();
   AppState.selectedDate = DateHelper.toDateString(today);
   AppState.viewYear = today.getFullYear();
@@ -1493,5 +1628,6 @@ document.addEventListener("DOMContentLoaded", () => {
   loadEventsData();
   MakassarClock.init();
   UpcomingCountdown.init();
+  AutoRefresh.init();
 });
 

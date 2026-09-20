@@ -55,9 +55,67 @@
   /* Transisi */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Scrollbar Theme Variables (Mode Terang) */
+  color-scheme: light;
+  --scrollbar-track: var(--bg-subtle);
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
 }
 
-/* Reset Dasar */
+/* ==========================================================================
+   TEMA GELAP (DARK MODE) OVERRIDES
+   ========================================================================== */
+[data-theme="dark"] {
+  /* Palet Warna Primer (Emerald disesuaikan untuk kontras tinggi di latar gelap) */
+  --primary: #10b981;
+  --primary-hover: #34d399;
+  --primary-active: #059669;
+  --primary-light: rgba(16, 185, 129, 0.16);
+  --primary-border: rgba(52, 211, 153, 0.35);
+  --primary-text: #6ee7b7;
+
+  /* Warna Aksen & Status */
+  --accent: #34d399;
+  --accent-glow: rgba(52, 211, 153, 0.3);
+  --danger: #f87171;
+  --danger-hover: #ef4444;
+  --danger-light: rgba(239, 68, 68, 0.16);
+  --danger-border: rgba(248, 113, 113, 0.35);
+  --warning: #fbbf24;
+  --warning-light: rgba(251, 191, 36, 0.16);
+  --info: #60a5fa;
+  --info-light: rgba(96, 165, 250, 0.16);
+
+  /* Palet Netral (Slate Gelap Premium) */
+  --bg-main: #0b0f19;
+  --bg-card: #151d2c;
+  --bg-subtle: #1e293b;
+  --bg-input: #111827;
+
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+
+  --border-light: #253349;
+  --border-focus: #10b981;
+
+  /* Bayangan & Elevasi pada background gelap */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 4px -1px rgba(0, 0, 0, 0.45), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+
+  /* Scrollbar Theme Variables (Mode Gelap) */
+  color-scheme: dark;
+  --scrollbar-track: #111827;
+  --scrollbar-thumb: #334155;
+  --scrollbar-thumb-hover: #475569;
+}
+
+/* Reset Dasar & Scrollbar */
 *,
 *::before,
 *::after {
@@ -65,6 +123,35 @@
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* Webkit Global Scrollbars (Chrome, Edge, Safari, Opera) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
 }
 
 body {
@@ -147,6 +234,51 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+/* Tombol Toggle Tema Gelap / Terang */
+.theme-toggle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary-hover);
+  border-color: var(--primary-border);
+  transform: scale(1.05);
+}
+
+.theme-toggle-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle-btn .theme-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--transition-fast);
+}
+
+.theme-toggle-btn:hover .theme-icon {
+  transform: rotate(15deg);
 }
 
 /* Badge Status Koneksi */
@@ -670,7 +802,7 @@ button.btn-text:focus-visible,
   height: 6px;
   border-radius: 50%;
   background-color: var(--primary);
-  box-shadow: 0 0 0 1.5px #ffffff;
+  box-shadow: 0 0 0 1.5px var(--bg-card);
   pointer-events: none;
   z-index: 2;
 }
@@ -882,7 +1014,7 @@ button.btn-text:focus-visible,
 }
 
 .upcoming-item:hover {
-  background: #ffffff;
+  background: var(--bg-card);
   border-color: var(--border-light);
   box-shadow: var(--shadow-sm);
   transform: translateX(3px);
@@ -1296,6 +1428,8 @@ button.btn-text:focus-visible,
   z-index: 100;
   transition: opacity var(--transition-normal);
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 .modal-dialog {
@@ -1394,6 +1528,27 @@ button.btn-text:focus-visible,
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: var(--radius-full);
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--scrollbar-track);
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 .modal-footer {
@@ -1554,7 +1709,7 @@ select.form-control {
   left: 0;
   right: 0;
   z-index: 60;
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1.5px solid var(--border-light);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-xl);
@@ -1564,7 +1719,29 @@ select.form-control {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   animation: dropdownIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.custom-select-options::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-select-options::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: var(--radius-full);
+}
+
+.custom-select-options::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+
+.custom-select-options::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 .custom-select-options.hidden {
@@ -1604,7 +1781,7 @@ select.form-control {
 }
 
 .custom-select-option.selected {
-  background-color: #ecfdf5;
+  background-color: var(--primary-light);
   color: var(--primary);
   font-weight: 600;
 }
@@ -1669,7 +1846,7 @@ select.form-control {
    ========================================================================== */
 .flatpickr-calendar {
   font-family: inherit !important;
-  background: #ffffff !important;
+  background: var(--bg-card) !important;
   border: 1.5px solid var(--border-light) !important;
   border-radius: var(--radius-md) !important;
   box-shadow: var(--shadow-xl) !important;
@@ -1822,7 +1999,7 @@ span.flatpickr-weekday {
   max-height: 48px !important;
   line-height: 48px !important;
   border-top: 1px solid var(--border-light) !important;
-  background: #ffffff !important;
+  background: var(--bg-card) !important;
   border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
 }
 
@@ -1832,6 +2009,7 @@ span.flatpickr-weekday {
   color: var(--text-main) !important;
   font-size: 1.05rem !important;
   border-radius: var(--radius-sm) !important;
+  background: transparent !important;
 }
 
 .flatpickr-time input:hover,
@@ -1879,7 +2057,7 @@ span.flatpickr-weekday {
 /* Custom cursor & clickability on Flatpickr inputs */
 .flatpickr-input-custom {
   cursor: pointer !important;
-  background-color: #ffffff !important;
+  background-color: var(--bg-input) !important;
 }
 
 /* Pesan Alert dalam Form */
@@ -1954,7 +2132,7 @@ span.flatpickr-weekday {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: #ffffff;
+  background: var(--bg-card);
   color: var(--text-main);
   padding: 0.875rem 1.25rem;
   border-radius: var(--radius-md);
@@ -2120,6 +2298,13 @@ span.flatpickr-weekday {
   .header-actions {
     gap: 0.5rem;
     flex-shrink: 0;
+  }
+
+  .theme-toggle-btn {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
   }
 
   #openAddModalBtn {
@@ -2399,6 +2584,14 @@ span.flatpickr-weekday {
     justify-content: flex-end;
     width: auto;
     flex: 0 0 auto;
+    gap: 0.35rem;
+  }
+
+  .theme-toggle-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
   }
 
   /* FIX UTAMA: badge status hanya selebar kontennya sendiri, tidak stretch */
@@ -2541,4 +2734,73 @@ span.flatpickr-weekday {
   .date-pill-month {
     font-size: 0.625rem;
   }
+}
+
+/* ==========================================================================
+   PENYESUAIAN KHUSUS TEMA GELAP (DARK MODE REFINEMENTS)
+   ========================================================================== */
+[data-theme="dark"] .status-demo {
+  background: rgba(245, 158, 11, 0.16);
+  color: #fde68a;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+[data-theme="dark"] .day-cell.today {
+  background-color: rgba(16, 185, 129, 0.16);
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+[data-theme="dark"] .day-cell.today .day-number {
+  color: var(--primary-text);
+}
+
+[data-theme="dark"] .day-cell.has-events:not(.selected) {
+  background-color: rgba(16, 185, 129, 0.08);
+}
+
+[data-theme="dark"] .legend-today {
+  background-color: rgba(16, 185, 129, 0.16);
+  border: 1.5px solid rgba(52, 211, 153, 0.45);
+}
+
+[data-theme="dark"] .event-card.status-tentative {
+  background: linear-gradient(to right, rgba(245, 158, 11, 0.08) 0%, var(--bg-card) 10%);
+}
+
+[data-theme="dark"] .event-card.status-tentative:hover {
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+[data-theme="dark"] .status-badge-tentative {
+  color: #fde68a;
+}
+
+[data-theme="dark"] .upcoming-item.status-tentative .date-pill-day {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .upcoming-countdown.countdown-live {
+  color: #fde68a;
+  background-color: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="dark"] .upcoming-countdown.countdown-live svg {
+  color: #fde68a;
+}
+
+[data-theme="dark"] .flatpickr-day.today {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(52, 211, 153, 0.45) !important;
+  color: var(--primary-text) !important;
+}
+
+[data-theme="dark"] .flatpickr-day:hover {
+  background: var(--primary-light) !important;
+  border-color: var(--primary-border) !important;
+  color: var(--primary-text) !important;
+}
+
+[data-theme="dark"] select.form-control {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
 }
