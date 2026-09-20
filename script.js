@@ -823,7 +823,7 @@ const UI = {
               </div>
             </div>
           </div>
-          <div style="color: var(--text-light); font-size: 1rem;">›</div>
+          <div style="color: var(--text-light); font-size: 1rem; flex-shrink: 0;">›</div>
         </div>
       `;
     }).join("");
