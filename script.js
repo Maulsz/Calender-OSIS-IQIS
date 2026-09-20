@@ -791,9 +791,9 @@ const UI = {
               <span class="date-pill-month">${monthShort}</span>
             </div>
             <div class="upcoming-item-info">
-              <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <div style="display: flex; align-items: center; gap: 0.4rem; min-width: 0; width: 100%;">
                 <div class="upcoming-item-title">${escapeHtml(event.judul)}</div>
-                ${isTentative ? `<span class="status-badge status-badge-tentative" style="padding: 0.05rem 0.4rem; font-size: 0.625rem;">Rencana</span>` : ""}
+                ${isTentative ? `<span class="status-badge status-badge-tentative" style="padding: 0.05rem 0.4rem; font-size: 0.625rem; flex-shrink: 0;">Rencana</span>` : ""}
               </div>
               <div class="upcoming-item-meta">
                 <div class="meta-item" title="Waktu Pelaksanaan">
@@ -1002,6 +1002,7 @@ const FormPickers = {
 
     // Inisialisasi locale 'id' jika tersedia
     const localeId = (flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : "default";
+    const modalEl = document.getElementById("eventModal") || document.body;
 
     // 1. Tanggal Mulai
     const inputTglMulai = document.getElementById("eventTanggalMulai");
@@ -1011,6 +1012,7 @@ const FormPickers = {
         locale: localeId,
         disableMobile: "true",
         allowInput: false,
+        appendTo: modalEl,
         onChange: (selectedDates, dateStr) => {
           if (!dateStr) return;
           // Sinkronisasi otomatis: Jika tanggal selesai kosong atau lebih awal dari tanggal mulai
@@ -1033,7 +1035,8 @@ const FormPickers = {
         dateFormat: "Y-m-d",
         locale: localeId,
         disableMobile: "true",
-        allowInput: false
+        allowInput: false,
+        appendTo: modalEl
       });
     }
 
@@ -1047,7 +1050,8 @@ const FormPickers = {
         time_24hr: true,
         disableMobile: "true",
         minuteIncrement: 5,
-        allowInput: false
+        allowInput: false,
+        appendTo: modalEl
       });
     }
 
@@ -1061,7 +1065,8 @@ const FormPickers = {
         time_24hr: true,
         disableMobile: "true",
         minuteIncrement: 5,
-        allowInput: false
+        allowInput: false,
+        appendTo: modalEl
       });
     }
   },
