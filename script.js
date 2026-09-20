@@ -1002,7 +1002,6 @@ const FormPickers = {
 
     // Inisialisasi locale 'id' jika tersedia
     const localeId = (flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : "default";
-    const modalEl = document.getElementById("eventModal") || document.body;
 
     // 1. Tanggal Mulai
     const inputTglMulai = document.getElementById("eventTanggalMulai");
@@ -1010,9 +1009,9 @@ const FormPickers = {
       this.fpTanggalMulai = flatpickr(inputTglMulai, {
         dateFormat: "Y-m-d",
         locale: localeId,
+        monthSelectorType: "static",
         disableMobile: "true",
         allowInput: false,
-        appendTo: modalEl,
         onChange: (selectedDates, dateStr) => {
           if (!dateStr) return;
           // Sinkronisasi otomatis: Jika tanggal selesai kosong atau lebih awal dari tanggal mulai
@@ -1034,9 +1033,9 @@ const FormPickers = {
       this.fpTanggalSelesai = flatpickr(inputTglSelesai, {
         dateFormat: "Y-m-d",
         locale: localeId,
+        monthSelectorType: "static",
         disableMobile: "true",
-        allowInput: false,
-        appendTo: modalEl
+        allowInput: false
       });
     }
 
@@ -1050,8 +1049,7 @@ const FormPickers = {
         time_24hr: true,
         disableMobile: "true",
         minuteIncrement: 5,
-        allowInput: false,
-        appendTo: modalEl
+        allowInput: false
       });
     }
 
@@ -1065,8 +1063,7 @@ const FormPickers = {
         time_24hr: true,
         disableMobile: "true",
         minuteIncrement: 5,
-        allowInput: false,
-        appendTo: modalEl
+        allowInput: false
       });
     }
   },
@@ -1183,6 +1180,11 @@ const Modal = {
    * Menutup modal form tambah/edit
    */
   closeModal() {
+    if (FormPickers.fpTanggalMulai) FormPickers.fpTanggalMulai.close();
+    if (FormPickers.fpTanggalSelesai) FormPickers.fpTanggalSelesai.close();
+    if (FormPickers.fpJamMulai) FormPickers.fpJamMulai.close();
+    if (FormPickers.fpJamSelesai) FormPickers.fpJamSelesai.close();
+
     const modal = document.getElementById("eventModal");
     if (modal) modal.classList.add("hidden");
     StatusDropdown.close();
@@ -1452,17 +1454,47 @@ function initializeEvents() {
   document.getElementById("cancelDeleteBtn").addEventListener("click", () => Modal.closeDeleteModal());
   document.getElementById("confirmDeleteBtn").addEventListener("click", handleConfirmDelete);
 
-  // Klik backdrop di luar modal untuk menutup
-  document.getElementById("eventModal").addEventListener("click", (e) => {
-    if (e.target.id === "eventModal") Modal.closeModal();
+  // Tutup Modal Form & Modal Hapus via Klik Backdrop
+  let isEventBackdropDown = false;
+  const eventModalEl = document.getElementById("eventModal");
+  eventModalEl.addEventListener("mousedown", (e) => {
+    isEventBackdropDown = (e.target === eventModalEl);
   });
-  document.getElementById("deleteModal").addEventListener("click", (e) => {
-    if (e.target.id === "deleteModal") Modal.closeDeleteModal();
+  eventModalEl.addEventListener("click", (e) => {
+    if (isEventBackdropDown && e.target === eventModalEl) {
+      // Jangan tutup modal jika ada popup kalender Flatpickr yang sedang terbuka
+      const activeFp = document.querySelector(".flatpickr-calendar.open");
+      if (activeFp) {
+        return;
+      }
+      Modal.closeModal();
+    }
+    isEventBackdropDown = false;
+  });
+
+  let isDeleteBackdropDown = false;
+  const deleteModalEl = document.getElementById("deleteModal");
+  deleteModalEl.addEventListener("mousedown", (e) => {
+    isDeleteBackdropDown = (e.target === deleteModalEl);
+  });
+  deleteModalEl.addEventListener("click", (e) => {
+    if (isDeleteBackdropDown && e.target === deleteModalEl) {
+      Modal.closeDeleteModal();
+    }
+    isDeleteBackdropDown = false;
   });
 
   // Keyboard Escape untuk menutup modal
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
+      const activeFp = document.querySelector(".flatpickr-calendar.open");
+      if (activeFp) {
+        return;
+      }
+      if (StatusDropdown.isOpen) {
+        StatusDropdown.close();
+        return;
+      }
       Modal.closeModal();
       Modal.closeDeleteModal();
     }
