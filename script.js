@@ -146,6 +146,143 @@ const DateHelper = {
    */
   isDateInRange(dateStr, startStr, endStr) {
     return dateStr >= startStr && dateStr <= endStr;
+  },
+
+  /**
+   * Parse tanggal (YYYY-MM-DD) dan jam (HH:mm) dalam konteks zona waktu Asia/Makassar (WITA, UTC+8)
+   */
+  parseEventDateTime(dateStr, timeStr) {
+    if (!dateStr) return null;
+    const t = (timeStr && /^\d{1,2}:\d{2}$/.test(timeStr.trim())) ? timeStr.trim() : "00:00";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return null;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    const timeParts = t.split(":");
+    const hour = parseInt(timeParts[0], 10);
+    const min = parseInt(timeParts[1], 10);
+    // Asia/Makassar selalu UTC+8 konstan
+    return new Date(Date.UTC(year, month - 1, day, hour - 8, min, 0));
+  },
+
+  /**
+   * Menghitung status countdown relatif terhadap waktu sekarang (Asia/Makassar)
+   */
+  getEventCountdown(event) {
+    if (!event || !event.tanggal_mulai) return null;
+    const start = this.parseEventDateTime(event.tanggal_mulai, event.jam_mulai);
+    if (!start) return null;
+
+    const end = this.parseEventDateTime(
+      event.tanggal_selesai || event.tanggal_mulai,
+      event.jam_selesai || "23:59"
+    );
+
+    const now = new Date();
+
+    // 1. Sedang berlangsung (antara jam mulai dan jam selesai)
+    if (end && now >= start && now <= end) {
+      return {
+        text: "Berlangsung sekarang",
+        isLive: true,
+        isPast: false
+      };
+    }
+
+    // 2. Sudah lewat jam selesai
+    if (end && now > end) {
+      return {
+        text: "Selesai",
+        isLive: false,
+        isPast: true
+      };
+    }
+
+    // 3. Belum mulai - hitung selisih waktu
+    const diffMs = start.getTime() - now.getTime();
+    if (diffMs <= 0) {
+      return {
+        text: "Berlangsung sekarang",
+        isLive: true,
+        isPast: false
+      };
+    }
+
+    // Bandingkan tanggal dalam zona waktu Asia/Makassar
+    const nowMakassarStr = now.toLocaleDateString("en-CA", { timeZone: "Asia/Makassar" });
+    const isSameDay = event.tanggal_mulai === nowMakassarStr;
+
+    if (!isSameDay) {
+      const dStart = this.parseLocalDate(event.tanggal_mulai);
+      const dToday = this.parseLocalDate(nowMakassarStr);
+      const dayDiff = Math.max(1, Math.round((dStart - dToday) / (1000 * 60 * 60 * 24)));
+      return {
+        text: `${dayDiff} hari lagi`,
+        isLive: false,
+        isPast: false
+      };
+    }
+
+    // Hari yang sama (Same day)
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+    if (diffHours >= 1) {
+      return {
+        text: `${diffHours} jam lagi`,
+        isLive: false,
+        isPast: false
+      };
+    } else {
+      const mins = Math.max(1, diffMinutes);
+      return {
+        text: `${mins} menit lagi`,
+        isLive: false,
+        isPast: false
+      };
+    }
+  }
+};
+
+// ==========================================================================
+// COUNTDOWN MANAGER KEGIATAN MENDATANG
+// ==========================================================================
+const UpcomingCountdown = {
+  intervalId: null,
+
+  updateCountdowns() {
+    const listContainer = document.getElementById("upcomingList");
+    if (!listContainer) return;
+
+    const countdownEls = listContainer.querySelectorAll(".upcoming-countdown");
+    countdownEls.forEach(el => {
+      const eventId = el.getAttribute("data-event-id");
+      if (!eventId) return;
+      const event = AppState.events.find(e => e.id === eventId);
+      if (!event) return;
+
+      const countdown = DateHelper.getEventCountdown(event);
+      if (!countdown) return;
+
+      const textEl = el.querySelector(".countdown-text");
+      if (textEl) {
+        textEl.textContent = countdown.text;
+      } else {
+        el.textContent = countdown.text;
+      }
+
+      if (countdown.isLive) {
+        el.classList.add("countdown-live");
+      } else {
+        el.classList.remove("countdown-live");
+      }
+    });
+  },
+
+  init() {
+    if (this.intervalId) clearInterval(this.intervalId);
+    this.intervalId = setInterval(() => this.updateCountdowns(), 30000); // Sinkronisasi tiap 30 detik
   }
 };
 
@@ -560,7 +697,7 @@ const UI = {
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
-            <span>${escapeHtml(event.jam_mulai || "-")} - ${escapeHtml(event.jam_selesai || "-")} WIB</span>
+            <span>${escapeHtml(event.jam_mulai || "-")} - ${escapeHtml(event.jam_selesai || "-")} WITA</span>
           </div>
 
           <div class="meta-item" title="Rentang Tanggal">
@@ -644,6 +781,7 @@ const UI = {
       const dayNum = startDate.getDate();
       const monthShort = DateHelper.BULAN_PENDEK[startDate.getMonth()];
       const isTentative = (event.status || "confirmed").toLowerCase() === "tentative";
+      const countdown = DateHelper.getEventCountdown(event);
 
       return `
         <div class="upcoming-item${isTentative ? " status-tentative" : ""}" data-date="${event.tanggal_mulai}" title="Klik untuk membuka tanggal kegiatan">
@@ -658,8 +796,30 @@ const UI = {
                 ${isTentative ? `<span class="status-badge status-badge-tentative" style="padding: 0.05rem 0.4rem; font-size: 0.625rem;">Rencana</span>` : ""}
               </div>
               <div class="upcoming-item-meta">
-                <span>🕒 ${escapeHtml(event.jam_mulai || "-")} WIB</span>
-                <span>📍 ${escapeHtml(event.lokasi || "-")}</span>
+                <div class="meta-item" title="Waktu Pelaksanaan">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span>${escapeHtml(event.jam_mulai || "-")} WITA</span>
+                </div>
+                <div class="meta-item" title="Lokasi Kegiatan">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  <span>${escapeHtml(event.lokasi || "-")}</span>
+                </div>
+                ${countdown ? `
+                  <span class="upcoming-countdown${countdown.isLive ? " countdown-live" : ""}" data-event-id="${event.id}">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M5 22h14"></path>
+                      <path d="M5 2h14"></path>
+                      <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
+                      <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
+                    </svg>
+                    <span class="countdown-text">${escapeHtml(countdown.text)}</span>
+                  </span>` : ""}
               </div>
             </div>
           </div>
@@ -1037,7 +1197,7 @@ const Modal = {
     const dateEl = document.getElementById("deleteTargetDate");
 
     if (titleEl) titleEl.textContent = event.judul;
-    if (dateEl) dateEl.textContent = `${DateHelper.formatIndoFull(event.tanggal_mulai)} (${event.jam_mulai} - ${event.jam_selesai} WIB)`;
+    if (dateEl) dateEl.textContent = `${DateHelper.formatIndoFull(event.tanggal_mulai)} (${event.jam_mulai} - ${event.jam_selesai} WITA)`;
 
     if (modal) modal.classList.remove("hidden");
   },
@@ -1327,5 +1487,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeEvents();
   loadEventsData();
   MakassarClock.init();
+  UpcomingCountdown.init();
 });
 
