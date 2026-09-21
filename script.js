@@ -1246,7 +1246,7 @@ async function loadEventsData(isSilent = false) {
       const badge = document.getElementById("connectionBadge");
       if (badge) {
         badge.className = "badge-status status-error";
-        badge.innerHTML = `<span class="status-dot"></span><span class="status-text">Sinkronisasi Gagal</span>`;
+        badge.innerHTML = `<span class="status-dot"></span><span class="status-text">Offline</span>`;
         badge.title = "Gagal memperbarui data kegiatan otomatis di latar belakang.";
       }
     } else {
