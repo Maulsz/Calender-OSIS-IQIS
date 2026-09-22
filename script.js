@@ -986,85 +986,92 @@ const StatusDropdown = {
 };
 
 // ==========================================================================
-// FLATPICKR CONTROLLER (PICKER TANGGAL & WAKTU ELEGAN)
+// FLATPICKR CONTROLLER (PICKER TANGGAL)
 // ==========================================================================
 const FormPickers = {
   fpTanggalMulai: null,
   fpTanggalSelesai: null,
-  fpJamMulai: null,
-  fpJamSelesai: null,
 
   init() {
-    if (typeof flatpickr === "undefined") {
-      console.warn("Flatpickr belum termuat, menggunakan fallback input bawaan.");
-      return;
-    }
+    if (typeof flatpickr !== "undefined") {
+      const localeId = (flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : "default";
 
-    // Inisialisasi locale 'id' jika tersedia
-    const localeId = (flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : "default";
-
-    // 1. Tanggal Mulai
-    const inputTglMulai = document.getElementById("eventTanggalMulai");
-    if (inputTglMulai) {
-      this.fpTanggalMulai = flatpickr(inputTglMulai, {
-        dateFormat: "Y-m-d",
-        locale: localeId,
-        monthSelectorType: "static",
-        disableMobile: "true",
-        allowInput: false,
-        onChange: (selectedDates, dateStr) => {
-          if (!dateStr) return;
-          // Sinkronisasi otomatis: Jika tanggal selesai kosong atau lebih awal dari tanggal mulai
-          if (this.fpTanggalSelesai) {
-            const endDateVal = document.getElementById("eventTanggalSelesai").value;
-            if (!endDateVal || endDateVal < dateStr) {
-              this.fpTanggalSelesai.setDate(dateStr, true);
+      // 1. Tanggal Mulai
+      const inputTglMulai = document.getElementById("eventTanggalMulai");
+      if (inputTglMulai) {
+        this.fpTanggalMulai = flatpickr(inputTglMulai, {
+          dateFormat: "Y-m-d",
+          locale: localeId,
+          monthSelectorType: "static",
+          disableMobile: "true",
+          allowInput: false,
+          onOpen: (selectedDates, dateStr, instance) => {
+            if (instance.element) {
+              instance.element.scrollIntoView({ behavior: "smooth", block: "center" });
             }
-            // Update batasan minimal tanggal selesai
-            this.fpTanggalSelesai.set("minDate", dateStr);
+            const reposition = () => {
+              if (instance.isOpen && typeof instance._positionCalendar === "function") {
+                instance._positionCalendar();
+              }
+            };
+            requestAnimationFrame(reposition);
+            setTimeout(reposition, 80);
+            setTimeout(reposition, 200);
+            setTimeout(reposition, 350);
+          },
+          onChange: (selectedDates, dateStr) => {
+            if (!dateStr) return;
+            // Sinkronisasi otomatis: Jika tanggal selesai kosong atau lebih awal dari tanggal mulai
+            if (this.fpTanggalSelesai) {
+              const endDateVal = document.getElementById("eventTanggalSelesai").value;
+              if (!endDateVal || endDateVal < dateStr) {
+                this.fpTanggalSelesai.setDate(dateStr, true);
+              }
+              // Update batasan minimal tanggal selesai
+              this.fpTanggalSelesai.set("minDate", dateStr);
+            }
           }
-        }
-      });
-    }
+        });
+      }
 
-    // 2. Tanggal Selesai
-    const inputTglSelesai = document.getElementById("eventTanggalSelesai");
-    if (inputTglSelesai) {
-      this.fpTanggalSelesai = flatpickr(inputTglSelesai, {
-        dateFormat: "Y-m-d",
-        locale: localeId,
-        monthSelectorType: "static",
-        disableMobile: "true",
-        allowInput: false
-      });
-    }
+      // 2. Tanggal Selesai
+      const inputTglSelesai = document.getElementById("eventTanggalSelesai");
+      if (inputTglSelesai) {
+        this.fpTanggalSelesai = flatpickr(inputTglSelesai, {
+          dateFormat: "Y-m-d",
+          locale: localeId,
+          monthSelectorType: "static",
+          disableMobile: "true",
+          allowInput: false,
+          onOpen: (selectedDates, dateStr, instance) => {
+            if (instance.element) {
+              instance.element.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            const reposition = () => {
+              if (instance.isOpen && typeof instance._positionCalendar === "function") {
+                instance._positionCalendar();
+              }
+            };
+            requestAnimationFrame(reposition);
+            setTimeout(reposition, 80);
+            setTimeout(reposition, 200);
+            setTimeout(reposition, 350);
+          }
+        });
+      }
 
-    // 3. Jam Mulai (Time-only 24 jam)
-    const inputJamMulai = document.getElementById("eventJamMulai");
-    if (inputJamMulai) {
-      this.fpJamMulai = flatpickr(inputJamMulai, {
-        enableTime: true,
-        noCalendar: true,
-        dateFormat: "H:i",
-        time_24hr: true,
-        disableMobile: "true",
-        minuteIncrement: 5,
-        allowInput: false
-      });
-    }
-
-    // 4. Jam Selesai (Time-only 24 jam)
-    const inputJamSelesai = document.getElementById("eventJamSelesai");
-    if (inputJamSelesai) {
-      this.fpJamSelesai = flatpickr(inputJamSelesai, {
-        enableTime: true,
-        noCalendar: true,
-        dateFormat: "H:i",
-        time_24hr: true,
-        disableMobile: "true",
-        minuteIncrement: 5,
-        allowInput: false
-      });
+      // Reposisi otomatis Flatpickr yang sedang terbuka saat modal-body di-scroll
+      const modalBody = document.querySelector("#eventModal .modal-body");
+      if (modalBody && !modalBody.dataset.fpScrollBound) {
+        modalBody.dataset.fpScrollBound = "true";
+        modalBody.addEventListener("scroll", () => {
+          [this.fpTanggalMulai, this.fpTanggalSelesai].forEach(fp => {
+            if (fp && fp.isOpen && typeof fp._positionCalendar === "function") {
+              fp._positionCalendar();
+            }
+          });
+        }, { passive: true });
+      }
     }
   },
 
@@ -1087,21 +1094,13 @@ const FormPickers = {
   },
 
   setJamMulai(val) {
-    if (this.fpJamMulai) {
-      this.fpJamMulai.setDate(val, true);
-    } else {
-      const el = document.getElementById("eventJamMulai");
-      if (el) el.value = val;
-    }
+    const el = document.getElementById("eventJamMulai");
+    if (el) el.value = val || "08:00";
   },
 
   setJamSelesai(val) {
-    if (this.fpJamSelesai) {
-      this.fpJamSelesai.setDate(val, true);
-    } else {
-      const el = document.getElementById("eventJamSelesai");
-      if (el) el.value = val;
-    }
+    const el = document.getElementById("eventJamSelesai");
+    if (el) el.value = val || "10:00";
   }
 };
 
@@ -1109,6 +1108,26 @@ const FormPickers = {
 // PENGATURAN MODAL FORM (TAMBAH, EDIT, HAPUS)
 // ==========================================================================
 const Modal = {
+  /**
+   * Mengunci scrolling pada halaman latar belakang tanpa menghilangkan scrollbar
+   */
+  lockScroll() {
+    document.body.classList.add("modal-open");
+  },
+
+  /**
+   * Mengembalikan scrolling pada halaman latar belakang jika semua modal tertutup
+   */
+  unlockScroll() {
+    const eventModal = document.getElementById("eventModal");
+    const deleteModal = document.getElementById("deleteModal");
+    const isEventOpen = eventModal && !eventModal.classList.contains("hidden");
+    const isDeleteOpen = deleteModal && !deleteModal.classList.contains("hidden");
+    if (!isEventOpen && !isDeleteOpen) {
+      document.body.classList.remove("modal-open");
+    }
+  },
+
   /**
    * Membuka modal form dalam mode TAMBAH
    */
@@ -1137,6 +1156,7 @@ const Modal = {
     FormPickers.setJamSelesai("10:00");
 
     modal.classList.remove("hidden");
+    this.lockScroll();
     document.getElementById("eventJudul").focus();
   },
 
@@ -1173,6 +1193,7 @@ const Modal = {
     FormPickers.setJamSelesai(event.jam_selesai || "10:00");
 
     modal.classList.remove("hidden");
+    this.lockScroll();
     document.getElementById("eventJudul").focus();
   },
 
@@ -1182,12 +1203,11 @@ const Modal = {
   closeModal() {
     if (FormPickers.fpTanggalMulai) FormPickers.fpTanggalMulai.close();
     if (FormPickers.fpTanggalSelesai) FormPickers.fpTanggalSelesai.close();
-    if (FormPickers.fpJamMulai) FormPickers.fpJamMulai.close();
-    if (FormPickers.fpJamSelesai) FormPickers.fpJamSelesai.close();
 
     const modal = document.getElementById("eventModal");
     if (modal) modal.classList.add("hidden");
     StatusDropdown.close();
+    this.unlockScroll();
   },
 
   /**
@@ -1207,6 +1227,7 @@ const Modal = {
     if (dateEl) dateEl.textContent = `${DateHelper.formatIndoFull(event.tanggal_mulai)} (${event.jam_mulai} - ${event.jam_selesai} WITA)`;
 
     if (modal) modal.classList.remove("hidden");
+    this.lockScroll();
   },
 
   /**
@@ -1216,6 +1237,7 @@ const Modal = {
     const modal = document.getElementById("deleteModal");
     if (modal) modal.classList.add("hidden");
     AppState.eventToDelete = null;
+    this.unlockScroll();
   }
 };
 
@@ -1484,7 +1506,7 @@ function initializeEvents() {
     isDeleteBackdropDown = false;
   });
 
-  // Keyboard Escape untuk menutup modal
+  // Keyboard Escape untuk menutup modal / dropdown
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       const activeFp = document.querySelector(".flatpickr-calendar.open");

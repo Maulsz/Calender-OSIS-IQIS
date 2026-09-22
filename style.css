@@ -134,6 +134,7 @@
 }
 
 html {
+  overflow-y: scroll;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
@@ -171,6 +172,11 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+body.modal-open {
+  overflow: hidden;
+  touch-action: none;
 }
 
 /* Kontainer Utama */
@@ -1597,6 +1603,8 @@ button.btn-text:focus-visible,
 
 .form-control {
   width: 100%;
+  height: 42px;
+  min-height: 42px;
   padding: 0.625rem 0.875rem;
   border: 1.5px solid var(--border-light);
   border-radius: var(--radius-sm);
@@ -1606,6 +1614,7 @@ button.btn-text:focus-visible,
   background-color: var(--bg-input);
   transition: all var(--transition-fast);
   outline: none;
+  box-sizing: border-box;
 }
 
 .form-control:focus {
@@ -1618,34 +1627,49 @@ button.btn-text:focus-visible,
 }
 
 textarea.form-control {
-  resize: vertical;
+  height: auto;
   min-height: 80px;
+  resize: vertical;
 }
 
 .form-row {
   display: flex;
   gap: 1rem;
+  width: 100%;
 }
 
 .col-half {
-  flex: 1;
+  flex: 1 1 0%;
+  min-width: 0;
 }
 
 .input-icon-wrap {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .input-icon {
   position: absolute;
   left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
   color: var(--text-muted);
   pointer-events: none;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
 }
 
 .form-control.with-icon {
   padding-left: 2.35rem;
+  width: 100%;
+  flex: 1 1 auto;
 }
 
 /* Fallback native select styling jika digunakan */
@@ -1860,6 +1884,74 @@ select.form-control {
 
 .custom-select-option.selected .option-check {
   opacity: 1;
+}
+
+/* ==========================================================================
+   NATIVE TIME INPUT CONTROLS (JAM MULAI & JAM SELESAI)
+   ========================================================================== */
+.time-control-wrap {
+  width: 100%;
+}
+
+.native-time-control {
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-main);
+  background-color: var(--bg-input);
+  letter-spacing: 0.02em;
+  padding-left: 2.35rem;
+  padding-right: 0.5rem;
+  height: 42px;
+  min-height: 42px;
+  box-sizing: border-box;
+  width: 100%;
+  /* max-width: 155px; */
+}
+
+/* Spinner panah atas/bawah bawaan (▲▼) selalu terlihat jelas by default */
+.native-time-control::-webkit-inner-spin-button {
+  -webkit-appearance: inner-spin-button !important;
+  display: block !important;
+  opacity: 0.8 !important;
+  cursor: pointer !important;
+  height: 22px !important;
+  margin-left: 0.45rem !important;
+  margin-right: 0.15rem !important;
+}
+
+.native-time-control::-webkit-inner-spin-button:hover {
+  opacity: 1 !important;
+}
+
+/* Sembunyikan ikon jam kedua browser (karena sudah ada SVG clock icon di kiri) */
+.native-time-control::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none !important;
+}
+
+/* Bagian teks jam:menit rapat dan natural di sebelah kontrol spinner */
+.native-time-control::-webkit-datetime-edit {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 0 !important;
+}
+
+.native-time-control::-webkit-datetime-edit-fields-wrapper {
+  padding: 0 !important;
+  display: inline-flex !important;
+}
+
+.native-time-control::-webkit-datetime-edit-hour-field,
+.native-time-control::-webkit-datetime-edit-minute-field {
+  padding: 0 1px !important;
+  font-weight: 600 !important;
+}
+
+.native-time-control::-webkit-datetime-edit-text {
+  padding: 0 2px !important;
+  color: var(--text-muted) !important;
+  font-weight: 700 !important;
 }
 
 /* ==========================================================================
