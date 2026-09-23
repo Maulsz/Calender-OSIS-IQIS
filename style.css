@@ -2166,9 +2166,13 @@ span.flatpickr-weekday {
   font-size: 1.15rem !important;
   border-radius: var(--radius-sm) !important;
   background: transparent !important;
+  /* width:100% fills only the number zone (wrapper width minus arrow column) */
+  width: 100% !important;
   height: 38px !important;
   line-height: 38px !important;
   text-align: center !important;
+  padding: 0 6px !important;
+  box-sizing: border-box !important;
   transition: all var(--transition-fast) !important;
 }
 
@@ -2187,14 +2191,59 @@ span.flatpickr-weekday {
   justify-content: center !important;
   height: 38px !important;
   line-height: 38px !important;
-  padding: 0 2px !important;
+  /* Equal margin on both sides keeps gap between hour / ":" / minute even */
+  width: 16px !important;
+  padding: 0 !important;
+  margin: 0 4px !important;
+  flex-shrink: 0 !important;
 }
 
 .flatpickr-time .numInputWrapper {
+  /* Fixed equal width for both hour and minute wrappers */
+  width: 56px !important;
+  /* 22px on the right is reserved exclusively for the arrow column —
+     input fills only the left 34px, so its hover bg can never bleed into arrows */
+  padding-right: 22px !important;
+  box-sizing: border-box !important;
   height: 40px !important;
+  flex-shrink: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
+  justify-content: flex-start !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Arrow buttons: always visible, larger click target, vertically centred */
+.flatpickr-time .numInputWrapper span.arrowUp,
+.flatpickr-time .numInputWrapper span.arrowDown {
+  /* Always show — not only on parent hover */
+  opacity: 1 !important;
+  /* 20×14 px hit area, absolutely placed in the reserved right column */
+  position: absolute !important;
+  right: 0 !important;
+  top: 50% !important;
+  bottom: auto !important;
+  width: 20px !important;
+  height: 14px !important;
+  min-width: 20px !important;
+  min-height: 14px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
   justify-content: center !important;
+  cursor: pointer !important;
+  border-radius: 3px !important;
+  transition: background var(--transition-fast) !important;
+}
+
+/* arrowUp anchors its bottom edge at centre → sits above; arrowDown sits below */
+.flatpickr-time .numInputWrapper span.arrowUp {
+  transform: translateY(-100%) !important;
+}
+
+.flatpickr-time .numInputWrapper span.arrowDown {
+  transform: translateY(0%) !important;
 }
 
 .flatpickr-time .numInputWrapper span.arrowUp:after {
@@ -2205,7 +2254,8 @@ span.flatpickr-weekday {
   border-top-color: var(--text-secondary) !important;
 }
 
-.flatpickr-time .numInputWrapper:hover span {
+.flatpickr-time .numInputWrapper:hover span.arrowUp,
+.flatpickr-time .numInputWrapper:hover span.arrowDown {
   background: var(--primary-light) !important;
 }
 
