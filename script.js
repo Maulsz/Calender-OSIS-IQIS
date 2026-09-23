@@ -986,15 +986,33 @@ const StatusDropdown = {
 };
 
 // ==========================================================================
-// FLATPICKR CONTROLLER (PICKER TANGGAL)
+// FLATPICKR CONTROLLER (PICKER TANGGAL & JAM)
 // ==========================================================================
 const FormPickers = {
   fpTanggalMulai: null,
   fpTanggalSelesai: null,
+  fpJamMulai: null,
+  fpJamSelesai: null,
 
   init() {
     if (typeof flatpickr !== "undefined") {
       const localeId = (flatpickr.l10ns && flatpickr.l10ns.id) ? flatpickr.l10ns.id : "default";
+
+      // Helper untuk onOpen reposisi dan scroll into view
+      const handleOpen = (selectedDates, dateStr, instance) => {
+        if (instance.element) {
+          instance.element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        const reposition = () => {
+          if (instance.isOpen && typeof instance._positionCalendar === "function") {
+            instance._positionCalendar();
+          }
+        };
+        requestAnimationFrame(reposition);
+        setTimeout(reposition, 80);
+        setTimeout(reposition, 200);
+        setTimeout(reposition, 350);
+      };
 
       // 1. Tanggal Mulai
       const inputTglMulai = document.getElementById("eventTanggalMulai");
@@ -1005,20 +1023,7 @@ const FormPickers = {
           monthSelectorType: "static",
           disableMobile: "true",
           allowInput: false,
-          onOpen: (selectedDates, dateStr, instance) => {
-            if (instance.element) {
-              instance.element.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-            const reposition = () => {
-              if (instance.isOpen && typeof instance._positionCalendar === "function") {
-                instance._positionCalendar();
-              }
-            };
-            requestAnimationFrame(reposition);
-            setTimeout(reposition, 80);
-            setTimeout(reposition, 200);
-            setTimeout(reposition, 350);
-          },
+          onOpen: handleOpen,
           onChange: (selectedDates, dateStr) => {
             if (!dateStr) return;
             // Sinkronisasi otomatis: Jika tanggal selesai kosong atau lebih awal dari tanggal mulai
@@ -1043,20 +1048,35 @@ const FormPickers = {
           monthSelectorType: "static",
           disableMobile: "true",
           allowInput: false,
-          onOpen: (selectedDates, dateStr, instance) => {
-            if (instance.element) {
-              instance.element.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-            const reposition = () => {
-              if (instance.isOpen && typeof instance._positionCalendar === "function") {
-                instance._positionCalendar();
-              }
-            };
-            requestAnimationFrame(reposition);
-            setTimeout(reposition, 80);
-            setTimeout(reposition, 200);
-            setTimeout(reposition, 350);
-          }
+          onOpen: handleOpen
+        });
+      }
+
+      // 3. Jam Mulai
+      const inputJamMulai = document.getElementById("eventJamMulai");
+      if (inputJamMulai) {
+        this.fpJamMulai = flatpickr(inputJamMulai, {
+          enableTime: true,
+          noCalendar: true,
+          dateFormat: "H:i",
+          time_24hr: true,
+          disableMobile: "true",
+          allowInput: false,
+          onOpen: handleOpen
+        });
+      }
+
+      // 4. Jam Selesai
+      const inputJamSelesai = document.getElementById("eventJamSelesai");
+      if (inputJamSelesai) {
+        this.fpJamSelesai = flatpickr(inputJamSelesai, {
+          enableTime: true,
+          noCalendar: true,
+          dateFormat: "H:i",
+          time_24hr: true,
+          disableMobile: "true",
+          allowInput: false,
+          onOpen: handleOpen
         });
       }
 
@@ -1065,7 +1085,7 @@ const FormPickers = {
       if (modalBody && !modalBody.dataset.fpScrollBound) {
         modalBody.dataset.fpScrollBound = "true";
         modalBody.addEventListener("scroll", () => {
-          [this.fpTanggalMulai, this.fpTanggalSelesai].forEach(fp => {
+          [this.fpTanggalMulai, this.fpTanggalSelesai, this.fpJamMulai, this.fpJamSelesai].forEach(fp => {
             if (fp && fp.isOpen && typeof fp._positionCalendar === "function") {
               fp._positionCalendar();
             }
@@ -1094,13 +1114,23 @@ const FormPickers = {
   },
 
   setJamMulai(val) {
-    const el = document.getElementById("eventJamMulai");
-    if (el) el.value = val || "08:00";
+    const timeVal = val || "08:00";
+    if (this.fpJamMulai) {
+      this.fpJamMulai.setDate(timeVal, true, "H:i");
+    } else {
+      const el = document.getElementById("eventJamMulai");
+      if (el) el.value = timeVal;
+    }
   },
 
   setJamSelesai(val) {
-    const el = document.getElementById("eventJamSelesai");
-    if (el) el.value = val || "10:00";
+    const timeVal = val || "10:00";
+    if (this.fpJamSelesai) {
+      this.fpJamSelesai.setDate(timeVal, true, "H:i");
+    } else {
+      const el = document.getElementById("eventJamSelesai");
+      if (el) el.value = timeVal;
+    }
   }
 };
 
@@ -1203,6 +1233,8 @@ const Modal = {
   closeModal() {
     if (FormPickers.fpTanggalMulai) FormPickers.fpTanggalMulai.close();
     if (FormPickers.fpTanggalSelesai) FormPickers.fpTanggalSelesai.close();
+    if (FormPickers.fpJamMulai) FormPickers.fpJamMulai.close();
+    if (FormPickers.fpJamSelesai) FormPickers.fpJamSelesai.close();
 
     const modal = document.getElementById("eventModal");
     if (modal) modal.classList.add("hidden");
