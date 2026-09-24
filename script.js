@@ -72,6 +72,16 @@ const AppState = {
 };
 
 // ==========================================================================
+// STATE MANAGEMENT OTENTIKASI & OTORISASI ADMIN
+// ==========================================================================
+const AuthState = {
+  isAdmin: false,                     // Mode Tamu (Guest) secara default
+  token: null,                        // Token sesi admin sementara (HMAC-SHA256)
+  expiresAt: null,                    // Waktu kedaluwarsa sesi (timestamp ms)
+  SESSION_KEY: "osis_admin_session"   // Kunci penyimpanan sesi di sessionStorage
+};
+
+// ==========================================================================
 // HELPER FORMAT TANGGAL & WAKTU (BAHASA INDONESIA)
 // ==========================================================================
 const DateHelper = {
@@ -382,13 +392,126 @@ const ApiClient = {
   },
 
   /**
-   * 2. POST: Mengirim permintaan aksi CRUD (create, update, delete)
-   * Catatan Penting: Menggunakan Content-Type 'text/plain;charset=utf-8'
-   * agar peramban (browser) tidak memicu CORS Preflight OPTIONS request.
+   * 2. Login Admin menggunakan PIN
+   * Mengirimkan PIN ke Google Apps Script backend untuk divalidasi dengan Script Properties
+   */
+  async login(pin) {
+    if (!this.hasConfiguredUrl()) {
+      // Mode Demo / Lokal: Validasi PIN demo (PIN minimal 6 digit angka)
+      const cleanPin = String(pin || "").trim();
+      if (!cleanPin || cleanPin.length < 6 || cleanPin.length > 8 || !/^\d+$/.test(cleanPin)) {
+        throw new Error("PIN Admin harus berupa 6–8 digit angka.");
+      }
+      const demoToken = "demo_token_" + Date.now();
+      const expiresAt = Date.now() + (3600 * 1000);
+      return {
+        success: true,
+        message: "Login admin berhasil (Mode Demo Lokal)",
+        token: demoToken,
+        expiresAt: expiresAt
+      };
+    }
+
+    // Pemanggilan nyata ke Google Apps Script Web App
+    const payload = JSON.stringify({
+      action: "login",
+      data: {
+        pin: String(pin).trim()
+      }
+    });
+
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: payload
+    });
+
+    if (!response.ok) {
+      throw new Error(`Respon server bermasalah (${response.status} ${response.statusText})`);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Login gagal. Periksa kembali PIN Anda.");
+    }
+
+    return result;
+  },
+
+  /**
+   * 3. Verifikasi Token Sesi Admin
+   * Memastikan token sesi yang ada di sessionStorage masih valid di backend
+   */
+  async verifySession(token) {
+    if (!token) return false;
+
+    if (!this.hasConfiguredUrl()) {
+      return String(token).startsWith("demo_token_");
+    }
+
+    try {
+      const payload = JSON.stringify({
+        action: "verifySession",
+        token: token
+      });
+
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: payload
+      });
+
+      if (!response.ok) return false;
+      const result = await response.json();
+      return Boolean(result.success && result.valid);
+    } catch (e) {
+      console.warn("Gagal verifikasi sesi admin ke server:", e);
+      return false;
+    }
+  },
+
+  /**
+   * 4. Logout Admin (Pencabutan Token di Backend)
+   */
+  async logout(token) {
+    if (!token) return;
+
+    if (!this.hasConfiguredUrl()) {
+      return;
+    }
+
+    try {
+      const payload = JSON.stringify({
+        action: "logout",
+        token: token
+      });
+
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: payload
+      });
+    } catch (e) {
+      console.warn("Peringatan saat logout server:", e);
+    }
+  },
+
+  /**
+   * 5. POST: Mengirim permintaan aksi CRUD (create, update, delete)
+   * Menyertakan token sesi admin untuk otorisasi di Google Apps Script
    */
   async postAction(action, data) {
     if (!this.hasConfiguredUrl()) {
-      // Simulasi CRUD pada LocalStorage
+      // Simulasi CRUD pada LocalStorage (Hanya jika admin atau demo)
       let events = await this.getAllEvents();
 
       if (action === "create") {
@@ -421,6 +544,7 @@ const ApiClient = {
     // Pemanggilan nyata ke Google Apps Script
     const payload = JSON.stringify({
       action: action,
+      token: AuthState.token, // Mengirim token sesi admin untuk otorisasi backend
       data: data
     });
 
@@ -439,6 +563,10 @@ const ApiClient = {
 
     const result = await response.json();
     if (!result.success) {
+      // Jika error otorisasi dari backend (token tidak valid / expired), logout otomatis
+      if (result.unauthorized) {
+        Auth.handleSessionExpired();
+      }
       throw new Error(result.error || `Gagal menjalankan aksi ${action}`);
     }
 
@@ -518,6 +646,62 @@ const UI = {
       badge.className = "badge-status status-demo";
       badge.innerHTML = `<span class="status-dot"></span><span class="status-text">Lokal</span>`;
       badge.title = "APPS_SCRIPT_URL belum disetel di script.js. Menggunakan penyimpanan browser.";
+    }
+  },
+
+  /**
+   * Update tampilan elemen UI berdasarkan status otentikasi (Mode Tamu vs Mode Admin)
+   */
+  updateAuthUI() {
+    const isAdmin = AuthState.isAdmin;
+    const body = document.body;
+
+    if (isAdmin) {
+      body.classList.add("is-admin");
+    } else {
+      body.classList.remove("is-admin");
+    }
+
+    // 1. Tombol Login Admin vs Indikator Admin & Logout di Header
+    const loginBtn = document.getElementById("adminLoginBtn");
+    const indicatorWrap = document.getElementById("adminIndicatorWrap");
+
+    if (loginBtn) {
+      if (isAdmin) loginBtn.classList.add("hidden");
+      else loginBtn.classList.remove("hidden");
+    }
+
+    if (indicatorWrap) {
+      if (isAdmin) indicatorWrap.classList.remove("hidden");
+      else indicatorWrap.classList.add("hidden");
+    }
+
+    // 2. Tombol Tambah Kegiatan di Header
+    const openAddBtn = document.getElementById("openAddModalBtn");
+    if (openAddBtn) {
+      if (isAdmin) openAddBtn.classList.remove("hidden");
+      else openAddBtn.classList.add("hidden");
+    }
+
+    // 3. Tombol Quick Add di Header Agenda Tanggal Terpilih
+    const quickAddBtn = document.getElementById("quickAddBtn");
+    if (quickAddBtn) {
+      if (isAdmin) quickAddBtn.classList.remove("hidden");
+      else quickAddBtn.classList.add("hidden");
+    }
+
+    // 4. Tombol Add di Empty State Agenda
+    const emptyStateAddBtn = document.getElementById("emptyStateAddBtn");
+    if (emptyStateAddBtn) {
+      if (isAdmin) emptyStateAddBtn.classList.remove("hidden");
+      else emptyStateAddBtn.classList.add("hidden");
+    }
+
+    // 5. Tombol Mobile FAB (Floating Action Button)
+    const mobileFabBtn = document.getElementById("mobileFabBtn");
+    if (mobileFabBtn) {
+      if (isAdmin) mobileFabBtn.classList.remove("hidden");
+      else mobileFabBtn.classList.add("hidden");
     }
   },
 
@@ -662,15 +846,8 @@ const UI = {
         ? `<span class="status-badge status-badge-tentative">Rencana</span>`
         : `<span class="status-badge status-badge-confirmed">Terkonfirmasi</span>`;
 
-      return `
-      <div class="event-card${isTentative ? " status-tentative" : ""}" data-id="${event.id}">
-        <div class="event-card-header">
-          <div style="display: flex; flex-direction: column; gap: 0.35rem; min-width: 0;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-              <h4 class="event-title">${escapeHtml(event.judul)}</h4>
-              ${statusBadge}
-            </div>
-          </div>
+      // Kontrol aksi (Edit & Hapus) hanya dirender jika pengguna adalah Administrator
+      const adminActionsHtml = AuthState.isAdmin ? `
           <div class="event-actions">
             <button class="action-btn edit-btn" data-id="${event.id}" title="Edit Kegiatan" aria-label="Edit kegiatan ${escapeHtml(event.judul)}">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -687,6 +864,18 @@ const UI = {
               </svg>
             </button>
           </div>
+      ` : "";
+
+      return `
+      <div class="event-card${isTentative ? " status-tentative" : ""}" data-id="${event.id}">
+        <div class="event-card-header">
+          <div style="display: flex; flex-direction: column; gap: 0.35rem; min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <h4 class="event-title">${escapeHtml(event.judul)}</h4>
+              ${statusBadge}
+            </div>
+          </div>
+          ${adminActionsHtml}
         </div>
 
         ${event.deskripsi ? `<p class="event-description">${escapeHtml(event.deskripsi)}</p>` : ""}
@@ -722,7 +911,7 @@ const UI = {
     `;
     }).join("");
 
-    // Pasang listener pada tombol aksi Edit & Delete
+    // Pasang listener pada tombol aksi Edit & Delete jika ada
     container.querySelectorAll(".edit-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -1151,9 +1340,11 @@ const Modal = {
   unlockScroll() {
     const eventModal = document.getElementById("eventModal");
     const deleteModal = document.getElementById("deleteModal");
+    const adminLoginModal = document.getElementById("adminLoginModal");
     const isEventOpen = eventModal && !eventModal.classList.contains("hidden");
     const isDeleteOpen = deleteModal && !deleteModal.classList.contains("hidden");
-    if (!isEventOpen && !isDeleteOpen) {
+    const isAdminLoginOpen = adminLoginModal && !adminLoginModal.classList.contains("hidden");
+    if (!isEventOpen && !isDeleteOpen && !isAdminLoginOpen) {
       document.body.classList.remove("modal-open");
     }
   },
@@ -1162,6 +1353,12 @@ const Modal = {
    * Membuka modal form dalam mode TAMBAH
    */
   openAddModal(defaultDate = null) {
+    if (!AuthState.isAdmin) {
+      Toast.show("Fitur ini memerlukan hak akses Administrator. Silakan masukkan PIN Admin.", "warning");
+      AdminLoginModal.open();
+      return;
+    }
+
     const modal = document.getElementById("eventModal");
     const form = document.getElementById("eventForm");
     const modalTitle = document.getElementById("modalTitle");
@@ -1194,6 +1391,12 @@ const Modal = {
    * Membuka modal form dalam mode EDIT
    */
   openEditModal(id) {
+    if (!AuthState.isAdmin) {
+      Toast.show("Fitur ini memerlukan hak akses Administrator. Silakan masukkan PIN Admin.", "warning");
+      AdminLoginModal.open();
+      return;
+    }
+
     const event = AppState.events.find(e => e.id === id);
     if (!event) {
       Toast.show("Data kegiatan tidak ditemukan", "error");
@@ -1246,6 +1449,12 @@ const Modal = {
    * Membuka modal konfirmasi hapus
    */
   openDeleteModal(id) {
+    if (!AuthState.isAdmin) {
+      Toast.show("Fitur ini memerlukan hak akses Administrator. Silakan masukkan PIN Admin.", "warning");
+      AdminLoginModal.open();
+      return;
+    }
+
     const event = AppState.events.find(e => e.id === id);
     if (!event) return;
 
@@ -1451,6 +1660,215 @@ async function handleConfirmDelete() {
     btnText.textContent = "Ya, Hapus";
   }
 }
+// ==========================================================================
+// CONTROLLER OTENTIKASI & SESI ADMIN
+// ==========================================================================
+const Auth = {
+  /**
+   * Inisialisasi status sesi saat halaman dimuat.
+   * Mode Tamu (Guest Mode) adalah default saat pertama kali dibuka.
+   */
+  async init() {
+    AuthState.isAdmin = false;
+    AuthState.token = null;
+    AuthState.expiresAt = null;
+
+    // Periksa apakah terdapat token tersimpan di sessionStorage
+    const savedSession = sessionStorage.getItem(AuthState.SESSION_KEY);
+    if (savedSession) {
+      try {
+        const sessionData = JSON.parse(savedSession);
+        const now = Date.now();
+
+        // 1. Validasi waktu kedaluwarsa lokal
+        if (sessionData && sessionData.token && sessionData.expiresAt && now < sessionData.expiresAt) {
+          // 2. Verifikasi token ke Google Apps Script backend sebelum mempercayai sesi
+          const isValid = await ApiClient.verifySession(sessionData.token);
+          if (isValid) {
+            this.setAdmin(sessionData.token, sessionData.expiresAt, false);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Gagal membaca sesi admin:", err);
+      }
+      // Bersihkan jika sesi tidak valid atau kedaluwarsa
+      sessionStorage.removeItem(AuthState.SESSION_KEY);
+    }
+
+    UI.updateAuthUI();
+  },
+
+  /**
+   * Mengatur status ke Mode Admin
+   */
+  setAdmin(token, expiresAt, isNewLogin = false) {
+    AuthState.isAdmin = true;
+    AuthState.token = token;
+    AuthState.expiresAt = expiresAt;
+
+    // Simpan ke sessionStorage (HANYA token sementara, BUKAN PIN)
+    try {
+      sessionStorage.setItem(AuthState.SESSION_KEY, JSON.stringify({
+        token: token,
+        expiresAt: expiresAt
+      }));
+    } catch (e) {
+      console.warn("Gagal menyimpan sesi ke sessionStorage:", e);
+    }
+
+    UI.updateAuthUI();
+    UI.renderSelectedDateAgenda(); // Render ulang kartu untuk memunculkan tombol Edit & Hapus
+  },
+
+  /**
+   * Logout dari Mode Admin dan kembali ke Mode Tamu
+   */
+  async logout(showToast = true) {
+    const currentToken = AuthState.token;
+
+    // Kembalikan state lokal ke Mode Tamu
+    AuthState.isAdmin = false;
+    AuthState.token = null;
+    AuthState.expiresAt = null;
+
+    // Hapus sesi dari sessionStorage
+    try {
+      sessionStorage.removeItem(AuthState.SESSION_KEY);
+    } catch (e) { }
+
+    // Revoke token di backend
+    if (currentToken) {
+      ApiClient.logout(currentToken);
+    }
+
+    UI.updateAuthUI();
+    UI.renderSelectedDateAgenda(); // Sembunyikan tombol Edit & Hapus
+
+    if (showToast) {
+      Toast.show("Anda telah keluar dari Mode Admin. Mode Tamu aktif.", "info");
+    }
+  },
+
+  /**
+   * Dipanggil saat token sesi kedaluwarsa saat permintaan API
+   */
+  handleSessionExpired() {
+    this.logout(false);
+    Modal.closeModal();
+    Modal.closeDeleteModal();
+    Toast.show("Sesi admin telah kedaluwarsa. Silakan login kembali dengan PIN Admin.", "error");
+  }
+};
+
+// ==========================================================================
+// CONTROLLER MODAL LOGIN PIN ADMIN
+// ==========================================================================
+const AdminLoginModal = {
+  open() {
+    const modal = document.getElementById("adminLoginModal");
+    const form = document.getElementById("adminLoginForm");
+    const pinInput = document.getElementById("adminPinInput");
+    const alertEl = document.getElementById("adminLoginAlert");
+    if (!modal || !form || !pinInput) return;
+
+    form.reset();
+    pinInput.type = "password";
+    this.updateEyeIcon(false);
+
+    if (alertEl) alertEl.classList.add("hidden");
+
+    modal.classList.remove("hidden");
+    Modal.lockScroll();
+
+    setTimeout(() => {
+      pinInput.focus();
+    }, 100);
+  },
+
+  close() {
+    const modal = document.getElementById("adminLoginModal");
+    if (modal) modal.classList.add("hidden");
+    Modal.unlockScroll();
+  },
+
+  togglePinVisibility() {
+    const pinInput = document.getElementById("adminPinInput");
+    if (!pinInput) return;
+    const isPassword = pinInput.type === "password";
+    pinInput.type = isPassword ? "text" : "password";
+    this.updateEyeIcon(!isPassword);
+  },
+
+  updateEyeIcon(isPassword) {
+    const btn = document.getElementById("togglePinVisibilityBtn");
+    if (!btn) return;
+    const eyeIcon = btn.querySelector(".pin-icon-eye");
+    const eyeOffIcon = btn.querySelector(".pin-icon-eye-off");
+
+    if (isPassword) {
+      if (eyeIcon) eyeIcon.classList.add("hidden");
+      if (eyeOffIcon) eyeOffIcon.classList.remove("hidden");
+      btn.title = "Sembunyikan PIN";
+      btn.setAttribute("aria-label", "Sembunyikan PIN");
+    } else {
+      if (eyeIcon) eyeIcon.classList.remove("hidden");
+      if (eyeOffIcon) eyeOffIcon.classList.add("hidden");
+      btn.title = "Lihat PIN";
+      btn.setAttribute("aria-label", "Lihat PIN");
+    }
+  }
+};
+
+/**
+ * Handle submit formulir PIN Admin
+ */
+async function handleAdminLoginSubmit(e) {
+  e.preventDefault();
+
+  const pinInput = document.getElementById("adminPinInput");
+  const alertEl = document.getElementById("adminLoginAlert");
+  const alertText = document.getElementById("adminLoginAlertText");
+  const submitBtn = document.getElementById("submitAdminLoginBtn");
+  const btnSpinner = submitBtn.querySelector(".btn-spinner");
+  const btnText = submitBtn.querySelector(".btn-text");
+
+  const pin = pinInput.value.trim();
+
+  // Validasi PIN lokal (6–8 digit angka)
+  if (!pin || pin.length < 6 || pin.length > 8 || !/^\d+$/.test(pin)) {
+    alertText.textContent = "PIN Admin harus berupa 6–8 digit angka.";
+    alertEl.classList.remove("hidden");
+    pinInput.focus();
+    return;
+  }
+
+  alertEl.classList.add("hidden");
+
+  try {
+    submitBtn.disabled = true;
+    pinInput.disabled = true;
+    btnSpinner.classList.remove("hidden");
+    btnText.textContent = "Memverifikasi...";
+
+    const result = await ApiClient.login(pin);
+
+    Toast.show(result.message || "Login admin berhasil! Anda dapat mengelola kegiatan.", "success");
+    Auth.setAdmin(result.token, result.expiresAt, true);
+    AdminLoginModal.close();
+
+  } catch (error) {
+    console.error("Gagal login admin:", error);
+    alertText.textContent = error.message || "PIN Admin salah. Silakan coba lagi.";
+    alertEl.classList.remove("hidden");
+    pinInput.select();
+  } finally {
+    submitBtn.disabled = false;
+    pinInput.disabled = false;
+    btnSpinner.classList.add("hidden");
+    btnText.textContent = "Masuk";
+  }
+}
 
 // ==========================================================================
 // INISIALISASI EVENT LISTENERS
@@ -1538,6 +1956,51 @@ function initializeEvents() {
     isDeleteBackdropDown = false;
   });
 
+  // Modal Login PIN Admin: Buka, Tutup, Toggle PIN, Submit, dan Klik Backdrop
+  const adminLoginBtn = document.getElementById("adminLoginBtn");
+  if (adminLoginBtn) {
+    adminLoginBtn.addEventListener("click", () => AdminLoginModal.open());
+  }
+
+  const closeAdminLoginBtn = document.getElementById("closeAdminLoginBtn");
+  if (closeAdminLoginBtn) {
+    closeAdminLoginBtn.addEventListener("click", () => AdminLoginModal.close());
+  }
+
+  const cancelAdminLoginBtn = document.getElementById("cancelAdminLoginBtn");
+  if (cancelAdminLoginBtn) {
+    cancelAdminLoginBtn.addEventListener("click", () => AdminLoginModal.close());
+  }
+
+  const togglePinBtn = document.getElementById("togglePinVisibilityBtn");
+  if (togglePinBtn) {
+    togglePinBtn.addEventListener("click", () => AdminLoginModal.togglePinVisibility());
+  }
+
+  const adminLoginForm = document.getElementById("adminLoginForm");
+  if (adminLoginForm) {
+    adminLoginForm.addEventListener("submit", handleAdminLoginSubmit);
+  }
+
+  const adminLogoutBtn = document.getElementById("adminLogoutBtn");
+  if (adminLogoutBtn) {
+    adminLogoutBtn.addEventListener("click", () => Auth.logout());
+  }
+
+  let isAdminLoginBackdropDown = false;
+  const adminLoginModalEl = document.getElementById("adminLoginModal");
+  if (adminLoginModalEl) {
+    adminLoginModalEl.addEventListener("mousedown", (e) => {
+      isAdminLoginBackdropDown = (e.target === adminLoginModalEl);
+    });
+    adminLoginModalEl.addEventListener("click", (e) => {
+      if (isAdminLoginBackdropDown && e.target === adminLoginModalEl) {
+        AdminLoginModal.close();
+      }
+      isAdminLoginBackdropDown = false;
+    });
+  }
+
   // Keyboard Escape untuk menutup modal / dropdown
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -1545,10 +2008,15 @@ function initializeEvents() {
       if (activeFp) {
         return;
       }
+      if (NavbarManager.isOpen) {
+        NavbarManager.close();
+        return;
+      }
       if (StatusDropdown.isOpen) {
         StatusDropdown.close();
         return;
       }
+      AdminLoginModal.close();
       Modal.closeModal();
       Modal.closeDeleteModal();
     }
@@ -1578,6 +2046,83 @@ function initializeEvents() {
     });
   }
 }
+
+// ==========================================================================
+// CONTROLLER NAVBAR & MOBILE DROPDOWN
+// ==========================================================================
+const NavbarManager = {
+  toggleBtn: null,
+  headerNav: null,
+  menuIcon: null,
+  closeIcon: null,
+  isOpen: false,
+
+  init() {
+    this.toggleBtn = document.getElementById("navbarToggleBtn");
+    this.headerNav = document.getElementById("headerNav");
+    if (!this.toggleBtn || !this.headerNav) return;
+
+    this.menuIcon = this.toggleBtn.querySelector(".nav-icon-menu");
+    this.closeIcon = this.toggleBtn.querySelector(".nav-icon-close");
+
+    // Toggle dropdown saat tombol hamburger diklik
+    this.toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.toggle();
+    });
+
+    // Tutup dropdown saat item aksi di dalam headerNav diklik (mobile)
+    this.headerNav.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (this.isOpen && window.innerWidth <= 640) {
+          this.close();
+        }
+      });
+    });
+
+    // Tutup dropdown jika klik di luar headerNav dan navbarToggleBtn
+    document.addEventListener("click", (e) => {
+      if (this.isOpen && !this.headerNav.contains(e.target) && !this.toggleBtn.contains(e.target)) {
+        this.close();
+      }
+    });
+
+    // Tutup dropdown jika layar di-resize melebihi 640px
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 640 && this.isOpen) {
+        this.close();
+      }
+    }, { passive: true });
+  },
+
+  open() {
+    this.isOpen = true;
+    this.headerNav.classList.add("nav-open");
+    this.toggleBtn.setAttribute("aria-expanded", "true");
+    this.toggleBtn.setAttribute("aria-label", "Tutup Menu Navigasi");
+    this.toggleBtn.setAttribute("title", "Tutup Menu Navigasi");
+    if (this.menuIcon) this.menuIcon.classList.add("hidden");
+    if (this.closeIcon) this.closeIcon.classList.remove("hidden");
+  },
+
+  close() {
+    this.isOpen = false;
+    this.headerNav.classList.remove("nav-open");
+    this.toggleBtn.setAttribute("aria-expanded", "false");
+    this.toggleBtn.setAttribute("aria-label", "Buka Menu Navigasi");
+    this.toggleBtn.setAttribute("title", "Buka Menu Navigasi");
+    if (this.menuIcon) this.menuIcon.classList.remove("hidden");
+    if (this.closeIcon) this.closeIcon.classList.add("hidden");
+  },
+
+  toggle() {
+    if (this.isOpen) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+};
 
 // ==========================================================================
 // PENGATUR TEMA (LIGHT / DARK MODE)
@@ -1699,7 +2244,8 @@ const AutoRefresh = {
 // ENTRY POINT (SAAT HALAMAN SELESAI DIMUAT)
 // ==========================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  // Inisialisasi controller tema & form controls
+  // Inisialisasi controller navbar, tema & form controls
+  NavbarManager.init();
   ThemeManager.init();
   StatusDropdown.init();
   FormPickers.init();
@@ -1711,6 +2257,7 @@ document.addEventListener("DOMContentLoaded", () => {
   AppState.viewMonth = today.getMonth();
 
   initializeEvents();
+  Auth.init(); // Inisialisasi status otentikasi (Guest Mode default & verifikasi token)
   loadEventsData();
   MakassarClock.init();
   UpcomingCountdown.init();
