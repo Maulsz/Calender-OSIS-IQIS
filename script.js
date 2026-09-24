@@ -13,8 +13,44 @@
  */
 
 // >>> TEMPELKAN WEB APP URL GOOGLE APPS SCRIPT ANDA DI SINI <<<
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyS_yRKW8heo_4D4frp5CSj8Tscvz8ugUw1ndgCcwGxFEVBE_6J2fHpK1IZFobUg4R28g/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYqSnJuhheFYHoDkxgMlhw6m_FgHEHpNaswfiytqVr6vScGXv21dFvY0OpMYp81tIl/exec";
+// DEMO DI COPY FILE SPREEDSHETS
+
 // Contoh: "https://script.google.com/macros/s/AKfycbxAbCdEfGhIjKlMnOpQrStUvWxYz/exec"
+
+/**
+ * Helper untuk sanitasi teks HTML guna mencegah XSS
+ */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/**
+ * Pilihan Divisi Penanggung Jawab Program Kerja OSIS
+ */
+const DIVISI_OPTIONS = [
+  { name: "Keislaman dan Pembinaan Karakter", key: "islam" },
+  { name: "Kepemimpinan dan Kebahasaan", key: "kepemimpinan" },
+  { name: "Komunikasi Media Kreatif", key: "media" },
+  { name: "Kewirausahaan dan Sosial Lingkungan", key: "wirausaha" },
+  { name: "Bersama / Proker Bersama", key: "bersama" }
+];
+
+/**
+ * Helper untuk mendapatkan key CSS divisi berdasarkan nama divisi
+ */
+function getDivisiKey(name) {
+  if (!name) return "";
+  const clean = String(name).trim();
+  const found = DIVISI_OPTIONS.find(d => d.name === clean);
+  return found ? found.key : "";
+}
 
 /**
  * Data awal (Seed / Mock Data)
@@ -24,9 +60,12 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyS_yRKW8heo_4D
 const SEED_EVENTS = [
   {
     id: "evt_demo_1",
-    judul: "Rapat Koordinasi Uji Kompetensi RPL",
-    deskripsi: "Pembahasan jadwal sinkronisasi server dan persiapan perangkat ujian siswa kelas XII.",
-    lokasi: "Lab Komputer RPL 1",
+    judul: "Kajian Rutin & Pembinaan Karakter",
+    deskripsi: "Kajian keislaman mingguan dan pembinaan akhlak siswa muslim di masjid sekolah.",
+    lokasi: "Masjid Al-Ikhlas",
+    divisi: "Keislaman dan Pembinaan Karakter",
+    proker: "Kajian Pekanan & Tahsin",
+    petugas: "Ahmad Fauzi & Tim Keislaman",
     tanggal_mulai: "2026-09-17",
     tanggal_selesai: "2026-09-17",
     jam_mulai: "08:30",
@@ -35,9 +74,12 @@ const SEED_EVENTS = [
   },
   {
     id: "evt_demo_2",
-    judul: "Workshop Pengembangan Web Modern (SMK Hebat)",
-    deskripsi: "Pelatihan pembuatan RESTful API dan integrasi cloud untuk siswa jurusan Rekayasa Perangkat Lunak.",
+    judul: "Latihan Dasar Kepemimpinan Siswa (LDKS)",
+    deskripsi: "Pelatihan kepemimpinan dan public speaking untuk calon pengurus OSIS periode baru.",
     lokasi: "Aula Graha Bhakti",
+    divisi: "Kepemimpinan dan Kebahasaan",
+    proker: "LDKS & English Club",
+    petugas: "Siti Rahma & BPH OSIS",
     tanggal_mulai: "2026-09-20",
     tanggal_selesai: "2026-09-21",
     jam_mulai: "09:00",
@@ -46,14 +88,45 @@ const SEED_EVENTS = [
   },
   {
     id: "evt_demo_3",
-    judul: "Apel Rutin & Penyerahan Piala Prestasi",
-    deskripsi: "Seluruh guru dan siswa wajib mengenakan seragam pramuka lengkap.",
-    lokasi: "Lapangan Upacara Utama",
+    judul: "Liputan Dokumentasi & Podcast OSIS",
+    deskripsi: "Produksi konten podcast sekolah dan publikasi dokumentasi kegiatan di media sosial.",
+    lokasi: "Studio Podcast Media",
+    divisi: "Komunikasi Media Kreatif",
+    proker: "Podcast Edukasi & Konten Kreatif",
+    petugas: "Rian Hidayat & Tim Media",
     tanggal_mulai: "2026-09-25",
     tanggal_selesai: "2026-09-25",
     jam_mulai: "07:00",
     jam_selesai: "08:00",
     status: "tentative"
+  },
+  {
+    id: "evt_demo_4",
+    judul: "Bazar Kewirausahaan & Aksi Peduli Lingkungan",
+    deskripsi: "Pameran produk kreativitas siswa dan aksi bersih lingkungan bersama komite sekolah.",
+    lokasi: "Area Gazebo & Kantin",
+    divisi: "Kewirausahaan dan Sosial Lingkungan",
+    proker: "Bazar Sekolah Hijau",
+    petugas: "Nurul Aini & Div. Wirausaha",
+    tanggal_mulai: "2026-09-28",
+    tanggal_selesai: "2026-09-28",
+    jam_mulai: "08:00",
+    jam_selesai: "14:00",
+    status: "confirmed"
+  },
+  {
+    id: "evt_demo_5",
+    judul: "Rapat Pleno & Evaluasi Program Kerja Gabungan",
+    deskripsi: "Evaluasi bulanan program kerja seluruh divisi OSIS bersama Pembina OSIS.",
+    lokasi: "Ruang Rapat Utama",
+    divisi: "Bersama / Proker Bersama",
+    proker: "Rapat Pleno Bulanan",
+    petugas: "Ketua OSIS & Sekbid",
+    tanggal_mulai: "2026-09-30",
+    tanggal_selesai: "2026-09-30",
+    jam_mulai: "13:00",
+    jam_selesai: "16:00",
+    status: "confirmed"
   }
 ];
 
@@ -196,7 +269,8 @@ const DateHelper = {
       return {
         text: "Berlangsung sekarang",
         isLive: true,
-        isPast: false
+        isPast: false,
+        minutesUntilStart: 0
       };
     }
 
@@ -205,7 +279,8 @@ const DateHelper = {
       return {
         text: "Selesai",
         isLive: false,
-        isPast: true
+        isPast: true,
+        minutesUntilStart: -1
       };
     }
 
@@ -215,9 +290,12 @@ const DateHelper = {
       return {
         text: "Berlangsung sekarang",
         isLive: true,
-        isPast: false
+        isPast: false,
+        minutesUntilStart: 0
       };
     }
+
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
     // Bandingkan tanggal dalam zona waktu Asia/Makassar
     const nowMakassarStr = now.toLocaleDateString("en-CA", { timeZone: "Asia/Makassar" });
@@ -230,26 +308,28 @@ const DateHelper = {
       return {
         text: `${dayDiff} hari lagi`,
         isLive: false,
-        isPast: false
+        isPast: false,
+        minutesUntilStart: diffMinutes
       };
     }
 
     // Hari yang sama (Same day)
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
     if (diffHours >= 1) {
       return {
         text: `${diffHours} jam lagi`,
         isLive: false,
-        isPast: false
+        isPast: false,
+        minutesUntilStart: diffMinutes
       };
     } else {
       const mins = Math.max(1, diffMinutes);
       return {
         text: `${mins} menit lagi`,
         isLive: false,
-        isPast: false
+        isPast: false,
+        minutesUntilStart: diffMinutes
       };
     }
   }
@@ -262,6 +342,11 @@ const UpcomingCountdown = {
   intervalId: null,
 
   updateCountdowns() {
+    // 1. Eksekusi pengecekan notifikasi peramban untuk seluruh kegiatan (independen dari DOM)
+    if (typeof NotificationManager !== "undefined" && typeof NotificationManager.checkUpcoming === "function") {
+      NotificationManager.checkUpcoming();
+    }
+
     const listContainer = document.getElementById("upcomingList");
     if (!listContainer) return;
 
@@ -359,9 +444,12 @@ const ApiClient = {
         try {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed)) {
-            // Normalisasi status default "confirmed" jika ada data lama yang belum memiliki field status
+            // Normalisasi field default jika ada data lama yang belum memiliki field divisi/proker/petugas/status
             return parsed.map(item => ({
               ...item,
+              divisi: item.divisi || "",
+              proker: item.proker || "",
+              petugas: item.petugas || "",
               status: item.status || "confirmed"
             }));
           }
@@ -388,7 +476,14 @@ const ApiClient = {
       throw new Error(result.error || "Gagal memuat data dari spreadsheet");
     }
 
-    return result.data || [];
+    const rawData = Array.isArray(result.data) ? result.data : [];
+    return rawData.map(item => ({
+      ...item,
+      divisi: item.divisi || "",
+      proker: item.proker || "",
+      petugas: item.petugas || "",
+      status: item.status || "confirmed"
+    }));
   },
 
   /**
@@ -795,7 +890,9 @@ const UI = {
       for (let k = 0; k < dotCount; k++) {
         const ev = dayEvents[k];
         const isTentative = (ev.status || "confirmed").toLowerCase() === "tentative";
-        dots += `<span class="event-dot${isTentative ? " dot-tentative" : ""}"></span>`;
+        const divKey = getDivisiKey(ev.divisi);
+        const divisiClass = divKey ? ` divisi-${divKey}` : "";
+        dots += `<span class="event-dot${divisiClass}${isTentative ? " dot-tentative" : ""}"></span>`;
       }
       indicatorsHtml = `<div class="day-indicators">${dots}</div>`;
     }
@@ -846,6 +943,11 @@ const UI = {
         ? `<span class="status-badge status-badge-tentative">Rencana</span>`
         : `<span class="status-badge status-badge-confirmed">Terkonfirmasi</span>`;
 
+      const divKey = getDivisiKey(event.divisi);
+      const divisiBadge = (event.divisi && divKey)
+        ? `<span class="divisi-badge divisi-${divKey}">${escapeHtml(event.divisi)}</span>`
+        : "";
+
       // Kontrol aksi (Edit & Hapus) hanya dirender jika pengguna adalah Administrator
       const adminActionsHtml = AuthState.isAdmin ? `
           <div class="event-actions">
@@ -873,6 +975,7 @@ const UI = {
             <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
               <h4 class="event-title">${escapeHtml(event.judul)}</h4>
               ${statusBadge}
+              ${divisiBadge}
             </div>
           </div>
           ${adminActionsHtml}
@@ -906,6 +1009,28 @@ const UI = {
             </svg>
             <span>${escapeHtml(event.lokasi || "Lokasi belum ditentukan")}</span>
           </div>
+
+          ${event.proker ? `
+            <div class="meta-item" title="Program Kerja">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              <span>${escapeHtml(event.proker)}</span>
+            </div>
+          ` : ""}
+
+          ${event.petugas ? `
+            <div class="meta-item" title="Petugas / Penanggung Jawab">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>${escapeHtml(event.petugas)}</span>
+            </div>
+          ` : ""}
         </div>
       </div>
     `;
@@ -971,9 +1096,11 @@ const UI = {
       const monthShort = DateHelper.BULAN_PENDEK[startDate.getMonth()];
       const isTentative = (event.status || "confirmed").toLowerCase() === "tentative";
       const countdown = DateHelper.getEventCountdown(event);
+      const divKey = getDivisiKey(event.divisi);
+      const borderClass = divKey ? ` border-divisi-${divKey}` : "";
 
       return `
-        <div class="upcoming-item${isTentative ? " status-tentative" : ""}" data-date="${event.tanggal_mulai}" title="Klik untuk membuka tanggal kegiatan">
+        <div class="upcoming-item${borderClass}${isTentative ? " status-tentative" : ""}" data-date="${event.tanggal_mulai}" title="Klik untuk membuka tanggal kegiatan">
           <div class="upcoming-item-left">
             <div class="date-pill">
               <span class="date-pill-day">${dayNum}</span>
@@ -1119,6 +1246,9 @@ const StatusDropdown = {
   },
 
   open() {
+    if (typeof DivisiDropdown !== "undefined" && DivisiDropdown.isOpen) {
+      DivisiDropdown.close();
+    }
     this.isOpen = true;
     this.wrap.classList.add("open");
     this.optionsList.classList.remove("hidden");
@@ -1171,6 +1301,149 @@ const StatusDropdown = {
 
   getValue() {
     return this.hiddenInput ? this.hiddenInput.value : "confirmed";
+  }
+};
+
+// ==========================================================================
+// CUSTOM DROPDOWN CONTROLLER (DIVISI PENANGGUNG JAWAB)
+// ==========================================================================
+const DivisiDropdown = {
+  wrap: null,
+  trigger: null,
+  optionsList: null,
+  hiddenInput: null,
+  isOpen: false,
+
+  init() {
+    this.wrap = document.getElementById("customDivisiDropdown");
+    this.trigger = document.getElementById("customDivisiTrigger");
+    this.optionsList = document.getElementById("customDivisiOptions");
+    this.hiddenInput = document.getElementById("eventDivisi");
+
+    if (!this.wrap || !this.trigger || !this.optionsList || !this.hiddenInput) return;
+
+    // Toggle dropdown open/close on trigger click
+    this.trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.toggle();
+    });
+
+    // Keyboard support on trigger
+    this.trigger.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+        e.preventDefault();
+        this.open();
+        const firstOption = this.optionsList.querySelector(".custom-select-option");
+        if (firstOption) firstOption.focus();
+      }
+    });
+
+    // Option clicks & keyboard selection
+    this.optionsList.querySelectorAll(".custom-select-option").forEach(opt => {
+      opt.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const val = opt.getAttribute("data-value");
+        this.setValue(val);
+        this.close();
+        this.trigger.focus();
+      });
+
+      opt.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          const val = opt.getAttribute("data-value");
+          this.setValue(val);
+          this.close();
+          this.trigger.focus();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          const next = opt.nextElementSibling;
+          if (next) next.focus();
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          const prev = opt.previousElementSibling;
+          if (prev) prev.focus();
+        } else if (e.key === "Escape") {
+          this.close();
+          this.trigger.focus();
+        }
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+      if (this.isOpen && !this.wrap.contains(e.target)) {
+        this.close();
+      }
+    });
+  },
+
+  open() {
+    if (typeof StatusDropdown !== "undefined" && StatusDropdown.isOpen) {
+      StatusDropdown.close();
+    }
+    this.isOpen = true;
+    this.wrap.classList.add("open");
+    this.optionsList.classList.remove("hidden");
+    this.trigger.setAttribute("aria-expanded", "true");
+    this.trigger.classList.add("active");
+  },
+
+  close() {
+    this.isOpen = false;
+    this.wrap.classList.remove("open");
+    this.optionsList.classList.add("hidden");
+    this.trigger.setAttribute("aria-expanded", "false");
+    this.trigger.classList.remove("active");
+  },
+
+  toggle() {
+    if (this.isOpen) {
+      this.close();
+    } else {
+      this.open();
+    }
+  },
+
+  setValue(val = "") {
+    if (!this.hiddenInput) return;
+    const cleanVal = (val || "").trim();
+    this.hiddenInput.value = cleanVal;
+
+    // Update selected item in options list
+    if (this.optionsList) {
+      this.optionsList.querySelectorAll(".custom-select-option").forEach(opt => {
+        const isMatch = opt.getAttribute("data-value") === cleanVal;
+        opt.classList.toggle("selected", isMatch);
+        opt.setAttribute("aria-selected", isMatch ? "true" : "false");
+      });
+    }
+
+    // Update trigger button UI
+    if (this.trigger) {
+      const valWrap = this.trigger.querySelector(".custom-select-value");
+      if (valWrap) {
+        const key = getDivisiKey(cleanVal);
+        if (cleanVal && key) {
+          valWrap.innerHTML = `
+            <div class="divisi-selected-display">
+              <span class="status-indicator-dot dot-divisi-${key}"></span>
+              <span>${escapeHtml(cleanVal)}</span>
+            </div>
+          `;
+        } else {
+          valWrap.innerHTML = `<span class="divisi-placeholder" style="color: var(--text-muted);">Pilih Divisi Penanggung Jawab</span>`;
+        }
+      }
+    }
+  },
+
+  getValue() {
+    return this.hiddenInput ? this.hiddenInput.value : "";
+  },
+
+  reset() {
+    this.setValue("");
   }
 };
 
@@ -1341,10 +1614,12 @@ const Modal = {
     const eventModal = document.getElementById("eventModal");
     const deleteModal = document.getElementById("deleteModal");
     const adminLoginModal = document.getElementById("adminLoginModal");
+    const emailSubscribeModal = document.getElementById("emailSubscribeModal");
     const isEventOpen = eventModal && !eventModal.classList.contains("hidden");
     const isDeleteOpen = deleteModal && !deleteModal.classList.contains("hidden");
     const isAdminLoginOpen = adminLoginModal && !adminLoginModal.classList.contains("hidden");
-    if (!isEventOpen && !isDeleteOpen && !isAdminLoginOpen) {
+    const isEmailOpen = emailSubscribeModal && !emailSubscribeModal.classList.contains("hidden");
+    if (!isEventOpen && !isDeleteOpen && !isAdminLoginOpen && !isEmailOpen) {
       document.body.classList.remove("modal-open");
     }
   },
@@ -1370,8 +1645,14 @@ const Modal = {
     modalTitle.textContent = "Tambah Kegiatan Baru";
     formAlert.classList.add("hidden");
 
-    // Reset status ke default 'confirmed' via custom dropdown
+    // Reset status & divisi custom dropdown
     StatusDropdown.setValue("confirmed");
+    DivisiDropdown.reset();
+
+    const prokerInput = document.getElementById("eventProker");
+    if (prokerInput) prokerInput.value = "";
+    const petugasInput = document.getElementById("eventPetugas");
+    if (petugasInput) petugasInput.value = "";
 
     // Isi otomatis tanggal mulai & selesai dengan tanggal yang sedang dipilih
     const targetDate = defaultDate || AppState.selectedDate || DateHelper.toDateString(new Date());
@@ -1416,8 +1697,14 @@ const Modal = {
     document.getElementById("eventDeskripsi").value = event.deskripsi || "";
     document.getElementById("eventLokasi").value = event.lokasi || "";
 
-    // Set status custom dropdown
+    // Set nilai custom dropdown & input divisi/proker/petugas
     StatusDropdown.setValue(event.status || "confirmed");
+    DivisiDropdown.setValue(event.divisi || "");
+
+    const prokerInput = document.getElementById("eventProker");
+    if (prokerInput) prokerInput.value = event.proker || "";
+    const petugasInput = document.getElementById("eventPetugas");
+    if (petugasInput) petugasInput.value = event.petugas || "";
 
     // Set tanggal & jam via Flatpickr
     FormPickers.setDateMulai(event.tanggal_mulai || "");
@@ -1442,6 +1729,7 @@ const Modal = {
     const modal = document.getElementById("eventModal");
     if (modal) modal.classList.add("hidden");
     StatusDropdown.close();
+    DivisiDropdown.close();
     this.unlockScroll();
   },
 
@@ -1535,6 +1823,10 @@ function validateEventForm(formData) {
     return "Lokasi kegiatan wajib diisi.";
   }
 
+  if (!formData.divisi || formData.divisi.trim() === "") {
+    return "Divisi Penanggung Jawab wajib dipilih.";
+  }
+
   if (!formData.tanggal_mulai) {
     return "Tanggal mulai wajib diisi.";
   }
@@ -1570,11 +1862,18 @@ async function handleFormSubmit(e) {
 
   const id = document.getElementById("eventId").value;
   const statusEl = document.getElementById("eventStatus");
+  const divisiEl = document.getElementById("eventDivisi");
+  const prokerEl = document.getElementById("eventProker");
+  const petugasEl = document.getElementById("eventPetugas");
+
   const formData = {
     id: id || undefined,
     judul: document.getElementById("eventJudul").value.trim(),
     deskripsi: document.getElementById("eventDeskripsi").value.trim(),
     lokasi: document.getElementById("eventLokasi").value.trim(),
+    divisi: divisiEl ? divisiEl.value.trim() : "",
+    proker: prokerEl ? prokerEl.value.trim() : "",
+    petugas: petugasEl ? petugasEl.value.trim() : "",
     status: statusEl ? statusEl.value : "confirmed",
     tanggal_mulai: document.getElementById("eventTanggalMulai").value,
     tanggal_selesai: document.getElementById("eventTanggalSelesai").value,
@@ -2016,6 +2315,13 @@ function initializeEvents() {
         StatusDropdown.close();
         return;
       }
+      if (typeof DivisiDropdown !== "undefined" && DivisiDropdown.isOpen) {
+        DivisiDropdown.close();
+        return;
+      }
+      if (typeof EmailSubscribeModal !== "undefined") {
+        EmailSubscribeModal.close();
+      }
       AdminLoginModal.close();
       Modal.closeModal();
       Modal.closeDeleteModal();
@@ -2046,6 +2352,279 @@ function initializeEvents() {
     });
   }
 }
+
+// ==========================================================================
+// CONTROLLER NOTIFIKASI PERAMBAN (BROWSER NOTIFICATION)
+// ==========================================================================
+const NotificationManager = {
+  STORAGE_KEY: "notification-preference",
+  notifiedIds: new Set(),
+
+  init() {
+    const btn = document.getElementById("browserNotificationBtn");
+    if (btn) {
+      btn.addEventListener("click", () => this.toggle());
+    }
+
+    // Restore preference only if saved is "enabled" AND permission is already "granted"
+    try {
+      const saved = localStorage.getItem(this.STORAGE_KEY);
+      if (saved === "enabled" && typeof Notification !== "undefined" && Notification.permission === "granted") {
+        this.updateUI(true);
+      } else {
+        this.updateUI(false);
+      }
+    } catch (e) {
+      this.updateUI(false);
+    }
+  },
+
+  updateUI(isEnabled) {
+    const btn = document.getElementById("browserNotificationBtn");
+    const dot = document.getElementById("notificationDot");
+    if (!btn) return;
+
+    btn.classList.toggle("active", isEnabled);
+    btn.setAttribute("aria-pressed", isEnabled ? "true" : "false");
+    const label = isEnabled ? "Matikan Notifikasi Pengingat Kegiatan" : "Aktifkan Notifikasi Pengingat Kegiatan";
+    btn.setAttribute("aria-label", label);
+    btn.setAttribute("title", label);
+
+    if (dot) {
+      dot.classList.toggle("hidden", !isEnabled);
+    }
+  },
+
+  async toggle() {
+    if (!("Notification" in window)) {
+      Toast.show("Peramban Anda tidak mendukung Web Notification API.", "info");
+      return;
+    }
+
+    try {
+      if (Notification.permission === "granted") {
+        const isCurrentlyEnabled = localStorage.getItem(this.STORAGE_KEY) === "enabled";
+        if (isCurrentlyEnabled) {
+          localStorage.setItem(this.STORAGE_KEY, "disabled");
+          this.updateUI(false);
+          Toast.show("Notifikasi peramban dinonaktifkan.", "info");
+        } else {
+          localStorage.setItem(this.STORAGE_KEY, "enabled");
+          this.updateUI(true);
+          Toast.show("Notifikasi peramban diaktifkan!", "success");
+          this.checkUpcoming();
+        }
+      } else if (Notification.permission === "default") {
+        const perm = await Notification.requestPermission();
+        if (perm === "granted") {
+          localStorage.setItem(this.STORAGE_KEY, "enabled");
+          this.updateUI(true);
+          Toast.show("Notifikasi peramban berhasil diaktifkan!", "success");
+          this.checkUpcoming();
+        } else {
+          localStorage.setItem(this.STORAGE_KEY, "disabled");
+          this.updateUI(false);
+          Toast.show("Izin notifikasi tidak diberikan.", "info");
+        }
+      } else if (Notification.permission === "denied") {
+        Toast.show("Izin notifikasi diblokir di pengaturan peramban Anda. Silakan izinkan melalui setelan situs di peramban.", "warning");
+      }
+    } catch (e) {
+      console.warn("Gagal meminta izin notifikasi:", e);
+    }
+  },
+
+  checkUpcoming() {
+    try {
+      if (!("Notification" in window) || Notification.permission !== "granted") return;
+      if (localStorage.getItem(this.STORAGE_KEY) !== "enabled") return;
+
+      if (!Array.isArray(AppState.events) || AppState.events.length === 0) return;
+
+      AppState.events.forEach(event => {
+        if (!event || !event.id || !event.jam_mulai || !event.tanggal_mulai) return;
+        if (this.notifiedIds.has(event.id)) return;
+
+        const countdown = DateHelper.getEventCountdown(event);
+        if (countdown && typeof countdown.minutesUntilStart === "number" && countdown.minutesUntilStart > 0 && countdown.minutesUntilStart <= 15) {
+          this.notifiedIds.add(event.id);
+          const lokasiText = event.lokasi ? ` di ${event.lokasi}` : "";
+          new Notification("Kegiatan akan dimulai", {
+            body: `${event.judul} dimulai jam ${event.jam_mulai} WITA${lokasiText}`,
+            icon: "favicon.svg"
+          });
+        }
+      });
+    } catch (e) {
+      console.warn("Peringatan saat mengirim notifikasi peramban:", e);
+    }
+  }
+};
+
+// ==========================================================================
+// CONTROLLER MODAL LANGGANAN NOTIFIKASI EMAIL
+// ==========================================================================
+const EmailSubscribeModal = {
+  mode: "subscribe", // "subscribe" | "unsubscribe"
+
+  init() {
+    const openBtn = document.getElementById("emailSubscribeModalBtn");
+    const closeBtn = document.getElementById("closeEmailModalBtn");
+    const cancelBtn = document.getElementById("cancelEmailModalBtn");
+    const toggleModeBtn = document.getElementById("toggleUnsubscribeModeBtn");
+    const form = document.getElementById("emailSubscribeForm");
+    const modalEl = document.getElementById("emailSubscribeModal");
+
+    if (openBtn) openBtn.addEventListener("click", () => this.open());
+    if (closeBtn) closeBtn.addEventListener("click", () => this.close());
+    if (cancelBtn) cancelBtn.addEventListener("click", () => this.close());
+    if (toggleModeBtn) {
+      toggleModeBtn.addEventListener("click", () => {
+        this.setMode(this.mode === "subscribe" ? "unsubscribe" : "subscribe");
+      });
+    }
+    if (form) form.addEventListener("submit", (e) => this.handleSubmit(e));
+
+    if (modalEl) {
+      let isBackdropDown = false;
+      modalEl.addEventListener("mousedown", (e) => {
+        isBackdropDown = (e.target === modalEl);
+      });
+      modalEl.addEventListener("click", (e) => {
+        if (isBackdropDown && e.target === modalEl) {
+          this.close();
+        }
+        isBackdropDown = false;
+      });
+    }
+  },
+
+  open() {
+    const modal = document.getElementById("emailSubscribeModal");
+    const input = document.getElementById("subscriberEmailInput");
+    const alertEl = document.getElementById("emailFormAlert");
+    if (!modal) return;
+
+    if (input) input.value = "";
+    if (alertEl) alertEl.classList.add("hidden");
+    this.setMode("subscribe");
+
+    modal.classList.remove("hidden");
+    Modal.lockScroll();
+
+    setTimeout(() => {
+      if (input) input.focus();
+    }, 100);
+  },
+
+  close() {
+    const modal = document.getElementById("emailSubscribeModal");
+    if (modal) modal.classList.add("hidden");
+    Modal.unlockScroll();
+  },
+
+  setMode(mode) {
+    this.mode = mode;
+    const titleEl = document.getElementById("emailModalTitle");
+    const descEl = document.getElementById("emailModalDesc");
+    const submitBtn = document.getElementById("submitEmailSubscribeBtn");
+    const toggleBtn = document.getElementById("toggleUnsubscribeModeBtn");
+    const alertEl = document.getElementById("emailFormAlert");
+
+    if (alertEl) alertEl.classList.add("hidden");
+
+    if (mode === "unsubscribe") {
+      if (titleEl) titleEl.textContent = "Berhenti Berlangganan";
+      if (descEl) descEl.textContent = "Masukkan alamat email Anda yang telah terdaftar untuk berhenti menerima pengingat email harian.";
+      if (submitBtn) {
+        const text = submitBtn.querySelector(".btn-text");
+        if (text) text.textContent = "Berhenti Berlangganan";
+      }
+      if (toggleBtn) toggleBtn.textContent = "Kembali ke pendaftaran";
+    } else {
+      if (titleEl) titleEl.textContent = "Langganan Notifikasi Email";
+      if (descEl) descEl.textContent = "Dapatkan ringkasan agenda program kerja OSIS setiap pagi hari langsung ke email Anda.";
+      if (submitBtn) {
+        const text = submitBtn.querySelector(".btn-text");
+        if (text) text.textContent = "Daftar";
+      }
+      if (toggleBtn) toggleBtn.textContent = "Berhenti berlangganan?";
+    }
+  },
+
+  async handleSubmit(e) {
+    e.preventDefault();
+
+    const input = document.getElementById("subscriberEmailInput");
+    const alertEl = document.getElementById("emailFormAlert");
+    const alertText = document.getElementById("emailFormAlertText");
+    const submitBtn = document.getElementById("submitEmailSubscribeBtn");
+    const btnSpinner = submitBtn ? submitBtn.querySelector(".btn-spinner") : null;
+    const btnText = submitBtn ? submitBtn.querySelector(".btn-text") : null;
+
+    const email = input ? input.value.trim().toLowerCase() : "";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!email || !emailRegex.test(email)) {
+      if (alertText) alertText.textContent = "Format alamat email tidak valid.";
+      if (alertEl) alertEl.classList.remove("hidden");
+      if (input) input.focus();
+      return;
+    }
+
+    if (alertEl) alertEl.classList.add("hidden");
+
+    if (!ApiClient.hasConfiguredUrl()) {
+      Toast.show("Fitur langganan email memerlukan koneksi backend Google Apps Script aktif.", "info");
+      return;
+    }
+
+    const action = (this.mode === "unsubscribe") ? "unsubscribeEmail" : "subscribeEmail";
+
+    try {
+      if (submitBtn) submitBtn.disabled = true;
+      if (input) input.disabled = true;
+      if (btnSpinner) btnSpinner.classList.remove("hidden");
+      if (btnText) btnText.textContent = "Memproses...";
+
+      const payload = JSON.stringify({
+        action: action,
+        email: email
+      });
+
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: payload
+      });
+
+      if (!response.ok) {
+        throw new Error(`Respon server bermasalah (${response.status})`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || "Gagal memproses permintaan langganan email.");
+      }
+
+      Toast.show(result.message || (this.mode === "unsubscribe" ? "Berhasil berhenti berlangganan." : "Pendaftaran email berhasil!"), "success");
+      this.close();
+    } catch (err) {
+      console.error("Gagal submit langganan email:", err);
+      if (alertText) alertText.textContent = err.message || "Terjadi kesalahan saat memproses permintaan.";
+      if (alertEl) alertEl.classList.remove("hidden");
+      Toast.show(err.message || "Gagal memproses langganan email", "error");
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
+      if (input) input.disabled = false;
+      if (btnSpinner) btnSpinner.classList.add("hidden");
+      if (btnText) btnText.textContent = (this.mode === "unsubscribe") ? "Berhenti Berlangganan" : "Daftar";
+    }
+  }
+};
 
 // ==========================================================================
 // CONTROLLER NAVBAR & MOBILE DROPDOWN
@@ -2212,14 +2791,18 @@ const AutoRefresh = {
   POLL_INTERVAL_MS: 20000, // Sinkronisasi berkala tiap 20 detik
 
   /**
-   * Cek apakah ada modal dialog yang sedang terbuka (form Tambah/Edit atau Hapus)
+   * Cek apakah ada modal dialog yang sedang terbuka
    */
   isModalOpen() {
     const eventModal = document.getElementById("eventModal");
     const deleteModal = document.getElementById("deleteModal");
+    const adminLoginModal = document.getElementById("adminLoginModal");
+    const emailSubscribeModal = document.getElementById("emailSubscribeModal");
     const isEventModalOpen = eventModal && !eventModal.classList.contains("hidden");
     const isDeleteModalOpen = deleteModal && !deleteModal.classList.contains("hidden");
-    return isEventModalOpen || isDeleteModalOpen;
+    const isAdminLoginOpen = adminLoginModal && !adminLoginModal.classList.contains("hidden");
+    const isEmailModalOpen = emailSubscribeModal && !emailSubscribeModal.classList.contains("hidden");
+    return isEventModalOpen || isDeleteModalOpen || isAdminLoginOpen || isEmailModalOpen;
   },
 
   /**
@@ -2244,10 +2827,13 @@ const AutoRefresh = {
 // ENTRY POINT (SAAT HALAMAN SELESAI DIMUAT)
 // ==========================================================================
 document.addEventListener("DOMContentLoaded", () => {
-  // Inisialisasi controller navbar, tema & form controls
+  // Inisialisasi controller navbar, tema, form controls & modal
   NavbarManager.init();
   ThemeManager.init();
   StatusDropdown.init();
+  DivisiDropdown.init();
+  NotificationManager.init();
+  EmailSubscribeModal.init();
   FormPickers.init();
 
   // Inisialisasi tanggal terpilih ke hari ini
