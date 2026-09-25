@@ -768,35 +768,74 @@
 
       <form id="emailSubscribeForm" novalidate autocomplete="off">
         <div class="modal-body">
-          <!-- Pesan Error / Info Form Email -->
+          <!-- Pesan Alert / Info Form Email -->
           <div id="emailFormAlert" class="alert alert-danger hidden">
             <span id="emailFormAlertText">Format email tidak valid.</span>
           </div>
 
-          <p id="emailModalDesc" class="text-muted text-sm" style="margin-bottom: 1rem; line-height: 1.5;">
-            Dapatkan ringkasan agenda program kerja OSIS setiap pagi hari langsung ke email Anda.
-          </p>
+          <!-- TAMPILAN 1: FORM INPUT EMAIL (Subscribe / Unsubscribe Manual / Cek Status) -->
+          <div id="emailFormSection">
+            <p id="emailModalDesc" class="text-muted text-sm" style="margin-bottom: 1rem; line-height: 1.5;">
+              Dapatkan ringkasan agenda program kerja OSIS setiap pagi hari langsung ke email Anda.
+            </p>
 
-          <div class="form-group">
-            <label for="subscriberEmailInput" class="form-label" id="subscriberEmailLabel">
-              Alamat Email Anda <span class="required">*</span>
-            </label>
-            <div class="input-icon-wrap">
-              <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
-              <input type="email" id="subscriberEmailInput" class="form-control with-icon"
-                placeholder="nama@sekolah.sch.id" required maxlength="120" autocomplete="email">
+            <div class="form-group" id="subscriberEmailGroup">
+              <label for="subscriberEmailInput" class="form-label" id="subscriberEmailLabel">
+                Alamat Email Anda <span class="required">*</span>
+              </label>
+              <div class="input-icon-wrap">
+                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <input type="email" id="subscriberEmailInput" class="form-control with-icon"
+                  placeholder="nama@sekolah.sch.id" required maxlength="120" autocomplete="email">
+              </div>
+            </div>
+
+            <!-- Link Aksi Bawah Form -->
+            <div id="emailFormLinks" style="margin-top: 0.875rem; font-size: 0.8125rem; display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-end;">
+              <button type="button" id="toggleCheckStatusModeBtn" class="btn-link"
+                style="background: none; border: none; padding: 0; color: var(--primary); text-decoration: underline; cursor: pointer; font-size: 0.8125rem;">
+                Cek status pendaftaran email
+              </button>
+              <button type="button" id="toggleUnsubscribeModeBtn" class="btn-link"
+                style="background: none; border: none; padding: 0; color: var(--text-muted); text-decoration: underline; cursor: pointer; font-size: 0.8125rem;">
+                Berhenti berlangganan?
+              </button>
             </div>
           </div>
 
-          <div style="margin-top: 0.875rem; font-size: 0.8125rem; display: flex; justify-content: flex-end;">
-            <button type="button" id="toggleUnsubscribeModeBtn" class="btn-link"
-              style="background: none; border: none; padding: 0; color: var(--primary); text-decoration: underline; cursor: pointer; font-size: 0.8125rem;">
-              Berhenti berlangganan?
-            </button>
+          <!-- TAMPILAN 2: STATUS SUDAH BERLANGGANAN (Aktif di LocalStorage) -->
+          <div id="emailSubscribedSection" class="hidden">
+            <div class="subscribed-card">
+              <div class="subscribed-badge-header">
+                <div class="subscribed-status-pill">
+                  <span class="status-indicator-dot dot-confirmed"></span>
+                  <span>Aktif Berlangganan</span>
+                </div>
+              </div>
+              <p class="subscribed-intro">Anda sudah terdaftar untuk menerima pengingat agenda harian dengan email:</p>
+              <div class="subscribed-email-box">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span id="subscribedEmailDisplay" class="subscribed-email-text">-</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8125rem; gap: 0.5rem; flex-wrap: wrap;">
+              <button type="button" id="switchOtherEmailBtn" class="btn-link"
+                style="background: none; border: none; padding: 0; color: var(--primary); text-decoration: underline; cursor: pointer; font-size: 0.8125rem;">
+                Daftar email lain
+              </button>
+              <button type="button" id="switchCheckOtherStatusBtn" class="btn-link"
+                style="background: none; border: none; padding: 0; color: var(--text-muted); text-decoration: underline; cursor: pointer; font-size: 0.8125rem;">
+                Cek status email lain
+              </button>
+            </div>
           </div>
         </div>
 

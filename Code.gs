@@ -137,7 +137,7 @@ var HEADERS = [
 
 // Konfigurasi sheet tab langganan email (Subscribers)
 var SUBSCRIBERS_SHEET_NAME = "Subscribers";
-var SUBSCRIBER_HEADERS = ["email", "subscribed_at"];
+var SUBSCRIBER_HEADERS = ["email", "subscribed_at", "status", "unsubscribed_at"];
 
 // ============================================================================
 // HELPER OTENTIKASI & SISTEM TOKEN ADMIN
@@ -420,6 +420,81 @@ function getOrCreateSheet() {
 }
 
 /**
+ * Migrasi otomatis sheet 'Subscribers' jika masih menggunakan format lama (2 kolom).
+ * Menyisipkan 2 kolom baru (status, unsubscribed_at), menulis ulang header,
+ * dan mem-backfill seluruh baris yang ada dengan status "subscribed".
+ */
+function migrateSubscribersSheetIfNeeded(sheet) {
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(30000);
+  } catch (e) {
+    console.warn("Tidak dapat memperoleh lock untuk migrasi sheet Subscribers:", e);
+    return;
+  }
+
+  try {
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+
+    if (lastRow === 0 || lastCol === 0) {
+      return; // Sheet baru kosong
+    }
+
+    var headerValues = sheet.getRange(1, 1, 1, Math.max(lastCol, SUBSCRIBER_HEADERS.length)).getValues()[0];
+    var col3Header = String(headerValues[2] || "").trim().toLowerCase();
+    var needsMigration = false;
+
+    // Deteksi jika struktur masih 2 kolom (header kolom 3 bukan 'status' atau jumlah kolom < 4)
+    if (lastCol < 4 || col3Header !== "status") {
+      needsMigration = true;
+    }
+
+    if (needsMigration) {
+      console.log("Menjalankan migrasi data pada sheet 'Subscribers' (kolom lama: " + lastCol + ")...");
+
+      // Sisipkan 2 kolom baru setelah kolom 2 (subscribed_at)
+      if (lastCol <= 2) {
+        sheet.insertColumnsAfter(2, 2);
+      } else if (lastCol === 3) {
+        sheet.insertColumnsAfter(3, 1);
+      }
+
+      // Tulis ulang baris header lengkap 4 kolom
+      sheet.getRange(1, 1, 1, SUBSCRIBER_HEADERS.length).setValues([SUBSCRIBER_HEADERS]);
+      var headerRange = sheet.getRange(1, 1, 1, SUBSCRIBER_HEADERS.length);
+      headerRange.setFontWeight("bold");
+      headerRange.setBackground("#10b981");
+      headerRange.setFontColor("#ffffff");
+      headerRange.setHorizontalAlignment("center");
+      sheet.setFrozenRows(1);
+
+      // Atur lebar kolom proporsional
+      sheet.setColumnWidth(1, 280); // email
+      sheet.setColumnWidth(2, 200); // subscribed_at
+      sheet.setColumnWidth(3, 130); // status
+      sheet.setColumnWidth(4, 200); // unsubscribed_at
+
+      // Backfill data baris lama jika ada: status = 'subscribed', unsubscribed_at = ''
+      if (lastRow > 1) {
+        var numDataRows = lastRow - 1;
+        var backfillValues = [];
+        for (var r = 0; r < numDataRows; r++) {
+          backfillValues.push(["subscribed", ""]);
+        }
+        sheet.getRange(2, 3, numDataRows, 2).setValues(backfillValues);
+      }
+
+      console.log("Migrasi sheet 'Subscribers' selesai.");
+    }
+  } finally {
+    try {
+      lock.releaseLock();
+    } catch (err) {}
+  }
+}
+
+/**
  * Fungsi pembantu untuk membuka atau membuat sheet tab 'Subscribers'
  * untuk menyimpan daftar email langganan notifikasi agenda.
  */
@@ -450,6 +525,11 @@ function getOrCreateSubscribersSheet() {
 
     sheet.setColumnWidth(1, 280); // email
     sheet.setColumnWidth(2, 200); // subscribed_at
+    sheet.setColumnWidth(3, 130); // status
+    sheet.setColumnWidth(4, 200); // unsubscribed_at
+  } else {
+    // Sheet ada data: jalankan migrasi aman jika diperlukan
+    migrateSubscribersSheetIfNeeded(sheet);
   }
 
   return sheet;
@@ -696,25 +776,49 @@ function doPost(e) {
       try {
         var subSheet = getOrCreateSubscribersSheet();
         var lastSubRow = subSheet.getLastRow();
+        var foundRowIndex = -1;
+        var existingStatus = "";
+
         if (lastSubRow > 1) {
-          var existingEmails = subSheet.getRange(2, 1, lastSubRow - 1, 1).getDisplayValues();
-          for (var s = 0; s < existingEmails.length; s++) {
-            if (existingEmails[s][0].trim().toLowerCase() === email) {
-              return createJsonResponse({
-                success: true,
-                message: "Email ini sudah terdaftar sebelumnya dalam daftar notifikasi agenda."
-              });
+          var existingData = subSheet.getRange(2, 1, lastSubRow - 1, Math.max(subSheet.getLastColumn(), 4)).getDisplayValues();
+          for (var s = 0; s < existingData.length; s++) {
+            if (existingData[s][0].trim().toLowerCase() === email) {
+              foundRowIndex = s + 2;
+              existingStatus = String(existingData[s][2] || "").trim().toLowerCase();
+              break;
             }
           }
         }
 
         var timestamp = Utilities.formatDate(new Date(), "Asia/Makassar", "yyyy-MM-dd HH:mm:ss") + " WITA";
-        subSheet.appendRow([email, timestamp]);
 
-        return createJsonResponse({
-          success: true,
-          message: "Terima kasih! Email Anda berhasil didaftarkan untuk menerima notifikasi agenda harian."
-        });
+        if (foundRowIndex !== -1) {
+          if (existingStatus === "subscribed") {
+            return createJsonResponse({
+              success: true,
+              alreadySubscribed: true,
+              email: email,
+              message: "Email ini sudah terdaftar sebelumnya dalam daftar notifikasi agenda."
+            });
+          } else {
+            // Re-subscribe email yang sebelumnya berstatus "unsubscribed"
+            subSheet.getRange(foundRowIndex, 2, 1, 3).setValues([[timestamp, "subscribed", ""]]);
+            return createJsonResponse({
+              success: true,
+              resubscribed: true,
+              email: email,
+              message: "Terima kasih! Email Anda berhasil didaftarkan kembali untuk menerima notifikasi agenda harian."
+            });
+          }
+        } else {
+          // Email baru: tambahkan baris baru dengan status "subscribed"
+          subSheet.appendRow([email, timestamp, "subscribed", ""]);
+          return createJsonResponse({
+            success: true,
+            email: email,
+            message: "Terima kasih! Email Anda berhasil didaftarkan untuk menerima notifikasi agenda harian."
+          });
+        }
       } finally {
         try {
           subLock.releaseLock();
@@ -723,7 +827,7 @@ function doPost(e) {
     }
 
     // ------------------------------------------------------------------------
-    // AKSI 5: UNSUBSCRIBE EMAIL (Berhenti Berlangganan - Akses Publik)
+    // AKSI 5: UNSUBSCRIBE EMAIL (Berhenti Berlangganan - Soft Delete)
     // ------------------------------------------------------------------------
     else if (action === "unsubscribeEmail") {
       var emailToUnsub = String(requestBody.email || data.email || "").trim().toLowerCase();
@@ -750,9 +854,11 @@ function doPost(e) {
         var targetUnsubIndex = -1;
 
         if (lastUnsubRow > 1) {
-          var subEmails = unsubSheet.getRange(2, 1, lastUnsubRow - 1, 1).getDisplayValues();
-          for (var u = 0; u < subEmails.length; u++) {
-            if (subEmails[u][0].trim().toLowerCase() === emailToUnsub) {
+          var subData = unsubSheet.getRange(2, 1, lastUnsubRow - 1, Math.max(unsubSheet.getLastColumn(), 4)).getDisplayValues();
+          for (var u = 0; u < subData.length; u++) {
+            var rowEmail = subData[u][0].trim().toLowerCase();
+            var rowStatus = String(subData[u][2] || "").trim().toLowerCase();
+            if (rowEmail === emailToUnsub && rowStatus === "subscribed") {
               targetUnsubIndex = u + 2;
               break;
             }
@@ -762,20 +868,67 @@ function doPost(e) {
         if (targetUnsubIndex === -1) {
           return createJsonResponse({
             success: false,
-            error: "Alamat email tidak ditemukan dalam daftar langganan notifikasi."
+            error: "Alamat email tidak ditemukan dalam daftar langganan notifikasi aktif."
           });
         }
 
-        unsubSheet.deleteRow(targetUnsubIndex);
+        var unsubTimestamp = Utilities.formatDate(new Date(), "Asia/Makassar", "yyyy-MM-dd HH:mm:ss") + " WITA";
+        // Soft delete: perbarui status menjadi "unsubscribed" dan catat unsubscribed_at (jangan pernah deleteRow)
+        unsubSheet.getRange(targetUnsubIndex, 3, 1, 2).setValues([["unsubscribed", unsubTimestamp]]);
 
         return createJsonResponse({
           success: true,
+          email: emailToUnsub,
           message: "Berhasil! Anda telah berhenti berlangganan notifikasi agenda harian."
         });
       } finally {
         try {
           unsubLock.releaseLock();
         } catch (e) {}
+      }
+    }
+
+    // ------------------------------------------------------------------------
+    // AKSI 6: CHECK SUBSCRIPTION (Cek Status Langganan Email - Akses Publik)
+    // ------------------------------------------------------------------------
+    else if (action === "checkSubscription") {
+      var checkEmail = String(requestBody.email || data.email || "").trim().toLowerCase();
+      var emailRegexCheck = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!checkEmail || !emailRegexCheck.test(checkEmail)) {
+        return createJsonResponse({
+          success: false,
+          error: "Format email tidak valid. Masukkan alamat email yang benar."
+        });
+      }
+
+      try {
+        var checkSheet = getOrCreateSubscribersSheet();
+        var lastCheckRow = checkSheet.getLastRow();
+        var isSubscribed = false;
+
+        if (lastCheckRow > 1) {
+          var checkValues = checkSheet.getRange(2, 1, lastCheckRow - 1, Math.max(checkSheet.getLastColumn(), 4)).getDisplayValues();
+          for (var c = 0; c < checkValues.length; c++) {
+            var cEmail = checkValues[c][0].trim().toLowerCase();
+            var cStatus = String(checkValues[c][2] || "").trim().toLowerCase();
+            if (cEmail === checkEmail && cStatus === "subscribed") {
+              isSubscribed = true;
+              break;
+            }
+          }
+        }
+
+        return createJsonResponse({
+          success: true,
+          subscribed: isSubscribed,
+          email: checkEmail,
+          message: isSubscribed ? "Email ini terdaftar aktif untuk menerima notifikasi." : "Email ini belum terdaftar dalam notifikasi agenda."
+        });
+      } catch (checkErr) {
+        return createJsonResponse({
+          success: false,
+          error: checkErr.message || "Gagal memeriksa status langganan email."
+        });
       }
     }
 
@@ -959,7 +1112,7 @@ function doPost(e) {
     else {
       return createJsonResponse({
         success: false,
-        error: "Aksi '" + action + "' tidak dikenali. Gunakan: 'login', 'verifySession', 'logout', 'subscribeEmail', 'unsubscribeEmail', 'create', 'update', atau 'delete'."
+        error: "Aksi '" + action + "' tidak dikenali. Gunakan: 'login', 'verifySession', 'logout', 'subscribeEmail', 'unsubscribeEmail', 'checkSubscription', 'create', 'update', atau 'delete'."
       });
     }
 
@@ -1025,7 +1178,7 @@ function sendDailyReminderEmails() {
       return;
     }
 
-    // 2. Ambil daftar email dari sheet Subscribers
+    // 2. Ambil daftar email dari sheet Subscribers (hanya penerima dengan status "subscribed")
     var subSheet = getOrCreateSubscribersSheet();
     var lastSubRow = subSheet.getLastRow();
     if (lastSubRow <= 1) {
@@ -1033,19 +1186,22 @@ function sendDailyReminderEmails() {
       return;
     }
 
-    var subValues = subSheet.getRange(2, 1, lastSubRow - 1, 1).getDisplayValues();
+    var subValues = subSheet.getRange(2, 1, lastSubRow - 1, Math.max(subSheet.getLastColumn(), 4)).getDisplayValues();
     var recipientMap = {};
     var recipientEmails = [];
     for (var j = 0; j < subValues.length; j++) {
       var emailCandidate = subValues[j][0].trim().toLowerCase();
-      if (emailCandidate && emailCandidate.indexOf("@") !== -1 && !recipientMap[emailCandidate]) {
+      var statusCandidate = String(subValues[j][2] || "").trim().toLowerCase();
+
+      // Hanya masukkan subscriber aktif (status "subscribed"), lewati yang "unsubscribed"
+      if (statusCandidate === "subscribed" && emailCandidate && emailCandidate.indexOf("@") !== -1 && !recipientMap[emailCandidate]) {
         recipientMap[emailCandidate] = true;
         recipientEmails.push(emailCandidate);
       }
     }
 
     if (recipientEmails.length === 0) {
-      console.log("Tidak ada alamat email valid di tab Subscribers.");
+      console.log("Tidak ada alamat email aktif berstatus 'subscribed' di tab Subscribers.");
       return;
     }
 

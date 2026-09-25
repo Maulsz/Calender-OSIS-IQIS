@@ -2629,12 +2629,80 @@ span.flatpickr-weekday {
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
   margin-bottom: 1.25rem;
+  line-height: 1.45;
 }
 
 .alert-danger {
   background: var(--danger-light);
   border: 1px solid var(--danger-border);
   color: var(--danger);
+}
+
+.alert-success {
+  background: var(--primary-light);
+  border: 1px solid var(--primary-border);
+  color: var(--primary-text);
+}
+
+.alert-info {
+  background: var(--info-light);
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+}
+
+/* Styling Kartu Status Langganan Aktif */
+.subscribed-card {
+  background: var(--primary-light);
+  border: 1.5px solid var(--primary-border);
+  border-radius: var(--radius-md);
+  padding: 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.subscribed-badge-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subscribed-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-card);
+  color: var(--primary-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--primary-border);
+}
+
+.subscribed-intro {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.subscribed-email-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--primary-border);
+  color: var(--primary);
+}
+
+.subscribed-email-text {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--text-main);
+  word-break: break-all;
 }
 
 .delete-target-preview {

@@ -13,7 +13,7 @@
  */
 
 // >>> TEMPELKAN WEB APP URL GOOGLE APPS SCRIPT ANDA DI SINI <<<
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyYqSnJuhheFYHoDkxgMlhw6m_FgHEHpNaswfiytqVr6vScGXv21dFvY0OpMYp81tIl/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFOPlodNxu0JSQkpDGnZ4wd89ryTAWjA8geQvBOGduYeLJUjc4va9e7iXDfNoaWAam/exec";
 // DEMO DI COPY FILE SPREEDSHETS
 
 // Contoh: "https://script.google.com/macros/s/AKfycbxAbCdEfGhIjKlMnOpQrStUvWxYz/exec"
@@ -2462,27 +2462,60 @@ const NotificationManager = {
 };
 
 // ==========================================================================
+// ==========================================================================
 // CONTROLLER MODAL LANGGANAN NOTIFIKASI EMAIL
 // ==========================================================================
 const EmailSubscribeModal = {
-  mode: "subscribe", // "subscribe" | "unsubscribe"
+  mode: "subscribe", // "subscribe" | "subscribed" | "unsubscribe" | "check_status"
+  currentEmail: "",
 
   init() {
     const openBtn = document.getElementById("emailSubscribeModalBtn");
     const closeBtn = document.getElementById("closeEmailModalBtn");
     const cancelBtn = document.getElementById("cancelEmailModalBtn");
-    const toggleModeBtn = document.getElementById("toggleUnsubscribeModeBtn");
+    const toggleCheckBtn = document.getElementById("toggleCheckStatusModeBtn");
+    const toggleUnsubBtn = document.getElementById("toggleUnsubscribeModeBtn");
+    const switchOtherBtn = document.getElementById("switchOtherEmailBtn");
+    const switchCheckOtherBtn = document.getElementById("switchCheckOtherStatusBtn");
     const form = document.getElementById("emailSubscribeForm");
     const modalEl = document.getElementById("emailSubscribeModal");
 
     if (openBtn) openBtn.addEventListener("click", () => this.open());
     if (closeBtn) closeBtn.addEventListener("click", () => this.close());
     if (cancelBtn) cancelBtn.addEventListener("click", () => this.close());
-    if (toggleModeBtn) {
-      toggleModeBtn.addEventListener("click", () => {
-        this.setMode(this.mode === "subscribe" ? "unsubscribe" : "subscribe");
+
+    if (toggleCheckBtn) {
+      toggleCheckBtn.addEventListener("click", () => {
+        if (this.mode === "check_status") {
+          this.setMode("subscribe");
+        } else {
+          this.setMode("check_status");
+        }
       });
     }
+
+    if (toggleUnsubBtn) {
+      toggleUnsubBtn.addEventListener("click", () => {
+        if (this.mode === "unsubscribe") {
+          this.setMode("subscribe");
+        } else {
+          this.setMode("unsubscribe");
+        }
+      });
+    }
+
+    if (switchOtherBtn) {
+      switchOtherBtn.addEventListener("click", () => {
+        this.setMode("subscribe", "");
+      });
+    }
+
+    if (switchCheckOtherBtn) {
+      switchCheckOtherBtn.addEventListener("click", () => {
+        this.setMode("check_status", "");
+      });
+    }
+
     if (form) form.addEventListener("submit", (e) => this.handleSubmit(e));
 
     if (modalEl) {
@@ -2501,19 +2534,23 @@ const EmailSubscribeModal = {
 
   open() {
     const modal = document.getElementById("emailSubscribeModal");
-    const input = document.getElementById("subscriberEmailInput");
-    const alertEl = document.getElementById("emailFormAlert");
     if (!modal) return;
 
-    if (input) input.value = "";
-    if (alertEl) alertEl.classList.add("hidden");
-    this.setMode("subscribe");
+    const storedEmail = localStorage.getItem("subscribed_email");
+    if (storedEmail && String(storedEmail).trim()) {
+      this.setMode("subscribed", String(storedEmail).trim());
+    } else {
+      this.setMode("subscribe", "");
+    }
 
     modal.classList.remove("hidden");
     Modal.lockScroll();
 
     setTimeout(() => {
-      if (input) input.focus();
+      const input = document.getElementById("subscriberEmailInput");
+      if (input && this.mode !== "subscribed") {
+        input.focus();
+      }
     }, 100);
   },
 
@@ -2523,32 +2560,105 @@ const EmailSubscribeModal = {
     Modal.unlockScroll();
   },
 
-  setMode(mode) {
+  setMode(mode, prefillEmail = "") {
     this.mode = mode;
     const titleEl = document.getElementById("emailModalTitle");
     const descEl = document.getElementById("emailModalDesc");
+    const labelEl = document.getElementById("subscriberEmailLabel");
+    const input = document.getElementById("subscriberEmailInput");
     const submitBtn = document.getElementById("submitEmailSubscribeBtn");
-    const toggleBtn = document.getElementById("toggleUnsubscribeModeBtn");
+    const cancelBtn = document.getElementById("cancelEmailModalBtn");
+    const toggleCheckBtn = document.getElementById("toggleCheckStatusModeBtn");
+    const toggleUnsubBtn = document.getElementById("toggleUnsubscribeModeBtn");
     const alertEl = document.getElementById("emailFormAlert");
+    const formSection = document.getElementById("emailFormSection");
+    const subscribedSection = document.getElementById("emailSubscribedSection");
+    const subscribedEmailDisplay = document.getElementById("subscribedEmailDisplay");
 
-    if (alertEl) alertEl.classList.add("hidden");
+    if (alertEl) {
+      alertEl.className = "alert alert-danger hidden";
+    }
 
-    if (mode === "unsubscribe") {
-      if (titleEl) titleEl.textContent = "Berhenti Berlangganan";
-      if (descEl) descEl.textContent = "Masukkan alamat email Anda yang telah terdaftar untuk berhenti menerima pengingat email harian.";
+    if (mode === "subscribed") {
+      // TAMPILAN: SUDAH BERLANGGANAN (AKTIF)
+      const storedEmail = prefillEmail || localStorage.getItem("subscribed_email") || "";
+      this.currentEmail = storedEmail;
+
+      if (formSection) formSection.classList.add("hidden");
+      if (subscribedSection) subscribedSection.classList.remove("hidden");
+      if (subscribedEmailDisplay) subscribedEmailDisplay.textContent = storedEmail || "-";
+
+      if (titleEl) titleEl.textContent = "Status Langganan Email";
+      if (cancelBtn) cancelBtn.textContent = "Tutup";
+
       if (submitBtn) {
+        submitBtn.className = "btn btn-danger";
         const text = submitBtn.querySelector(".btn-text");
         if (text) text.textContent = "Berhenti Berlangganan";
       }
-      if (toggleBtn) toggleBtn.textContent = "Kembali ke pendaftaran";
     } else {
-      if (titleEl) titleEl.textContent = "Langganan Notifikasi Email";
-      if (descEl) descEl.textContent = "Dapatkan ringkasan agenda program kerja OSIS setiap pagi hari langsung ke email Anda.";
-      if (submitBtn) {
-        const text = submitBtn.querySelector(".btn-text");
-        if (text) text.textContent = "Daftar";
+      // TAMPILAN: FORM INPUT
+      if (formSection) formSection.classList.remove("hidden");
+      if (subscribedSection) subscribedSection.classList.add("hidden");
+      if (cancelBtn) cancelBtn.textContent = "Batal";
+
+      if (input) {
+        input.value = prefillEmail || (mode === "subscribe" ? "" : input.value);
       }
-      if (toggleBtn) toggleBtn.textContent = "Berhenti berlangganan?";
+
+      if (mode === "unsubscribe") {
+        if (titleEl) titleEl.textContent = "Berhenti Berlangganan";
+        if (descEl) descEl.textContent = "Masukkan alamat email Anda yang telah terdaftar untuk berhenti menerima pengingat email harian.";
+        if (labelEl) labelEl.innerHTML = 'Alamat Email Terdaftar <span class="required">*</span>';
+        if (toggleCheckBtn) {
+          toggleCheckBtn.textContent = "Cek status pendaftaran email";
+          toggleCheckBtn.classList.remove("hidden");
+        }
+        if (toggleUnsubBtn) {
+          toggleUnsubBtn.textContent = "Kembali ke formulir pendaftaran";
+          toggleUnsubBtn.style.color = "var(--primary)";
+        }
+        if (submitBtn) {
+          submitBtn.className = "btn btn-danger";
+          const text = submitBtn.querySelector(".btn-text");
+          if (text) text.textContent = "Berhenti Berlangganan";
+        }
+      } else if (mode === "check_status") {
+        if (titleEl) titleEl.textContent = "Cek Status Pendaftaran Email";
+        if (descEl) descEl.textContent = "Periksa apakah alamat email Anda sudah terdaftar dalam sistem pengingat agenda kegiatan harian.";
+        if (labelEl) labelEl.innerHTML = 'Alamat Email yang Ingin Dicek <span class="required">*</span>';
+        if (toggleCheckBtn) {
+          toggleCheckBtn.textContent = "Kembali ke formulir pendaftaran";
+          toggleCheckBtn.classList.remove("hidden");
+        }
+        if (toggleUnsubBtn) {
+          toggleUnsubBtn.textContent = "Berhenti berlangganan?";
+          toggleUnsubBtn.style.color = "var(--text-muted)";
+        }
+        if (submitBtn) {
+          submitBtn.className = "btn btn-primary";
+          const text = submitBtn.querySelector(".btn-text");
+          if (text) text.textContent = "Cek Status";
+        }
+      } else {
+        // Mode "subscribe" (Pendaftaran Baru)
+        if (titleEl) titleEl.textContent = "Langganan Notifikasi Email";
+        if (descEl) descEl.textContent = "Dapatkan ringkasan agenda program kerja OSIS setiap pagi hari langsung ke email Anda.";
+        if (labelEl) labelEl.innerHTML = 'Alamat Email Anda <span class="required">*</span>';
+        if (toggleCheckBtn) {
+          toggleCheckBtn.textContent = "Cek status pendaftaran email lain";
+          toggleCheckBtn.classList.remove("hidden");
+        }
+        if (toggleUnsubBtn) {
+          toggleUnsubBtn.textContent = "Berhenti berlangganan?";
+          toggleUnsubBtn.style.color = "var(--text-muted)";
+        }
+        if (submitBtn) {
+          submitBtn.className = "btn btn-primary";
+          const text = submitBtn.querySelector(".btn-text");
+          if (text) text.textContent = "Daftar";
+        }
+      }
     }
   },
 
@@ -2562,13 +2672,22 @@ const EmailSubscribeModal = {
     const btnSpinner = submitBtn ? submitBtn.querySelector(".btn-spinner") : null;
     const btnText = submitBtn ? submitBtn.querySelector(".btn-text") : null;
 
-    const email = input ? input.value.trim().toLowerCase() : "";
+    let targetEmail = "";
+    if (this.mode === "subscribed") {
+      targetEmail = this.currentEmail || localStorage.getItem("subscribed_email") || "";
+    } else {
+      targetEmail = input ? input.value.trim().toLowerCase() : "";
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!email || !emailRegex.test(email)) {
+    if (!targetEmail || !emailRegex.test(targetEmail)) {
       if (alertText) alertText.textContent = "Format alamat email tidak valid.";
-      if (alertEl) alertEl.classList.remove("hidden");
-      if (input) input.focus();
+      if (alertEl) {
+        alertEl.className = "alert alert-danger";
+        alertEl.classList.remove("hidden");
+      }
+      if (input && this.mode !== "subscribed") input.focus();
       return;
     }
 
@@ -2579,7 +2698,12 @@ const EmailSubscribeModal = {
       return;
     }
 
-    const action = (this.mode === "unsubscribe") ? "unsubscribeEmail" : "subscribeEmail";
+    let action = "subscribeEmail";
+    if (this.mode === "subscribed" || this.mode === "unsubscribe") {
+      action = "unsubscribeEmail";
+    } else if (this.mode === "check_status") {
+      action = "checkSubscription";
+    }
 
     try {
       if (submitBtn) submitBtn.disabled = true;
@@ -2589,7 +2713,7 @@ const EmailSubscribeModal = {
 
       const payload = JSON.stringify({
         action: action,
-        email: email
+        email: targetEmail
       });
 
       const response = await fetch(APPS_SCRIPT_URL, {
@@ -2610,18 +2734,71 @@ const EmailSubscribeModal = {
         throw new Error(result.error || "Gagal memproses permintaan langganan email.");
       }
 
-      Toast.show(result.message || (this.mode === "unsubscribe" ? "Berhasil berhenti berlangganan." : "Pendaftaran email berhasil!"), "success");
-      this.close();
+      // 1. Aksi Check Subscription
+      if (action === "checkSubscription") {
+        if (result.subscribed) {
+          localStorage.setItem("subscribed_email", targetEmail);
+          Toast.show(`Email ${targetEmail} aktif terdaftar!`, "success");
+          this.setMode("subscribed", targetEmail);
+        } else {
+          if (alertText) {
+            alertText.innerHTML = `Email <strong>${escapeHtml(targetEmail)}</strong> belum terdaftar dalam sistem notifikasi.`;
+          }
+          if (alertEl) {
+            alertEl.className = "alert alert-info";
+            alertEl.classList.remove("hidden");
+          }
+          Toast.show("Email belum terdaftar dalam notifikasi.", "info");
+        }
+        return;
+      }
+
+      // 2. Aksi Unsubscribe
+      if (action === "unsubscribeEmail") {
+        const stored = localStorage.getItem("subscribed_email");
+        if (stored && stored.toLowerCase() === targetEmail.toLowerCase()) {
+          localStorage.removeItem("subscribed_email");
+        }
+        Toast.show(result.message || "Berhasil berhenti berlangganan.", "success");
+        this.setMode("subscribe", "");
+        return;
+      }
+
+      // 3. Aksi Subscribe (Pendaftaran Baru atau Re-subscribe / Sudah Terdaftar)
+      if (action === "subscribeEmail") {
+        localStorage.setItem("subscribed_email", targetEmail);
+
+        if (result.alreadySubscribed) {
+          Toast.show("Email ini sudah terdaftar sebelumnya.", "info");
+        } else {
+          Toast.show(result.message || "Pendaftaran email berhasil!", "success");
+        }
+
+        this.setMode("subscribed", targetEmail);
+      }
+
     } catch (err) {
       console.error("Gagal submit langganan email:", err);
       if (alertText) alertText.textContent = err.message || "Terjadi kesalahan saat memproses permintaan.";
-      if (alertEl) alertEl.classList.remove("hidden");
+      if (alertEl) {
+        alertEl.className = "alert alert-danger";
+        alertEl.classList.remove("hidden");
+      }
       Toast.show(err.message || "Gagal memproses langganan email", "error");
     } finally {
       if (submitBtn) submitBtn.disabled = false;
       if (input) input.disabled = false;
       if (btnSpinner) btnSpinner.classList.add("hidden");
-      if (btnText) btnText.textContent = (this.mode === "unsubscribe") ? "Berhenti Berlangganan" : "Daftar";
+
+      if (btnText) {
+        if (this.mode === "subscribed" || this.mode === "unsubscribe") {
+          btnText.textContent = "Berhenti Berlangganan";
+        } else if (this.mode === "check_status") {
+          btnText.textContent = "Cek Status";
+        } else {
+          btnText.textContent = "Daftar";
+        }
+      }
     }
   }
 };
